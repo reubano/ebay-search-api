@@ -394,6 +394,7 @@ class Finding(Ebay):
 		items = []
 		currency = self.global_ids[self.kwargs['country']]['currency']
 		result = response.searchResult.item
+		pages = response.paginationOutput.totalPages
 
 		if result and hasattr(result, 'update'):  # one result
 			result = [result]
@@ -438,4 +439,4 @@ class Finding(Ebay):
 
 			items.append(item)
 
-		return {r['id']: r for r in items}
+		return {'results': {r['id']: r for r in items}, 'pages': pages}
