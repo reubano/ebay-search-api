@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 import os.path as p
 
-from pprint import pprint
-
 from subprocess import call, check_call
-from flask import current_app as app
 from flask.ext.script import Manager
 from app import create_app
 
 manager = Manager(create_app)
-manager.add_option(
-	'-m', '--cfgmode', dest='config_mode', default='Development')
+manager.add_option('-m', '--cfgmode', dest='config_mode', default='Development')
 manager.add_option('-f', '--cfgfile', dest='config_file', type=p.abspath)
 
 

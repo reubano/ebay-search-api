@@ -4,12 +4,10 @@
 
 
 import dateutil.parser as du
-import yaml
 
-from urllib2 import HTTPError
 from os import getenv
 from ebaysdk import finding, trading
-from ebaysdk.exception import ConnectionError
+
 
 class Andand(object):
 	"""A Ruby inspired null soaking object"""
@@ -137,7 +135,8 @@ class Trading(Ebay):
 			certid = '7c187051-74a6-4566-9e87-482200e05005'
 			token = 'AgAAAA**AQAAAA**aAAAAA**yOwQUw**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJkoWpCJaKpg+dj6x9nY+seQ**/iMCAA**AAMAAA**e33vxWHuVgf9AVDih4FqUJg/iihYvl8tvksaAVGo4XMgqewCP7ysfcui9cblPLrNgTiyJRgrk+WxG+hvTjxCVEHR0bQF36TUkHMyAv5vVzVQpeZDHV5GMo0vxsYOr5euTze1+E1V/8+JsXTYgqXl8qWrDoEqLuwi/GI2g2svvY08xL5ZmOHwNshkzUag4ctXXy27Wt0RkRbHqcl2KmdELNftz9rhowFEEaqgLG+8xrkthHrMAmp4BiQx9kaKrn5PVdL9NN1i/yXjeiEwSyrNurHirtZm4FKlxt++Vw446mEjwNj92I3x22lIIi3k9d9n7VMQ7UFFmZpz0LjV1tvfIuAXpbYUNbx2luRI4Z9ibmQv/V6IoJ4/0YEEqh8UePT2mWQSuJeyFRwfa2pgHsjkPZCjbjDAyWKYRfeHsIw0M3AOQbnsF/URM90qG5EBgBHwnDQmFSekeSt+xhAk+ANfdJ2udCiHRefO8QQKqNaKHw48S2SnX1QEmLkajEVr2gsX/lyyVp777s4UrDu8n5BGcQdb6idipSmPV5HFz/Vd1RaHzO3fcbKDmuZugbrQfKWyyQIkavZWRm1bllfVWeE6daKHL2ZmpKx7A7kCh+Di+YeyLdBK2Fa47lFjGMG7y436LVS7kuV4A1+tvzMqh32FiTviKYetRpY3MXhtXrv6GYlL35ew+lVxUDOVpgV/CFwoo0aS/w1oSZ7KnuT/j/HAAIEZilbkuRmNNqmA97nh0EowGqbcNeSIU//jIMWPlOB7'
 
-		self.kwargs.update({'domain': domain, 'certid': certid, 'token': token})
+		self.kwargs.update({'site_id': site_id, 'domain': domain})
+		self.kwargs.update({'certid': certid, 'token': token})
 		self.api = trading(**self.kwargs)
 
 	def get_item(self, id):
@@ -432,6 +431,7 @@ class Finding(Ebay):
 				'price': price,
 				'buy_now_price': buy_now_price,
 				'shipping': shipping,
+				'price_and_shipping': price_and_shipping,
 				'buy_now_price_and_shipping': buy_now_price_and_shipping,
 				'end_date_time': end_date_time,
 				'end_date': end_date,

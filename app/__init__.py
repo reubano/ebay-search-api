@@ -7,15 +7,17 @@
 """
 import config
 
+from os import environ
 from json import JSONEncoder, dumps
 from urllib import unquote
-from api import Trading, Finding, ConnectionError
-from pprint import pprint
+from api import Trading, Finding
+from ebaysdk.exception import ConnectionError
 from flask import Flask, redirect, url_for, request, make_response
 from flask.ext.cache import Cache
 
 cache = Cache()
 search_cache_timeout = 1 * 60 * 60  # hours (in seconds)
+
 
 def jsonify(result, status=200):
 	response = make_response(dumps(result, cls=CustomEncoder))
@@ -64,7 +66,8 @@ def create_app(config_mode=None, config_file=None):
 		cache_config = {
 			'CACHE_TYPE': 'memcached',
 			'CACHE_MEMCACHED_SERVERS': [environ.get('MEMCACHE_SERVERS')]}
- 	else: cache_config['CACHE_TYPE'] = 'simple'
+	else:
+		cache_config['CACHE_TYPE'] = 'simple'
 
 	cache.init_app(app, config=cache_config)
 
@@ -83,7 +86,6 @@ def create_app(config_mode=None, config_file=None):
 	def search():
 		args = request.args.to_dict()
 		region = args.get('region', 'US')
-		sub_category = args.get('subCategory')
 		finding = Finding(region=region)
 
 		kwargs = {

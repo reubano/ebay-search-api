@@ -24,9 +24,9 @@ config = {
 		'Operating System :: Microsoft :: Windows',
 		'Operating System :: Microsoft :: POSIX'],
 	'packages': find_packages(),
-	'zip_safe': False
+	'zip_safe': False,
 	'license': 'MIT',
-	'platforms' ['MacOS X', 'Windows', 'Linux']
+	'platforms': ['MacOS X', 'Windows', 'Linux'],
 	'include_package_data': True}
 
 setup(**config)
