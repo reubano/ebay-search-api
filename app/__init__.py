@@ -107,6 +107,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/category/<name>/subcategories/')
 	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
+	@cache.cached(timeout=search_cache_timeout)
 	def sub_category(name):
 		name = name.lower()
 		args = request.args.to_dict()
@@ -131,6 +132,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/item/<id>/')
 	@app.route('%s/item/<id>/' % app.config['API_URL_PREFIX'])
+	@cache.cached(timeout=search_cache_timeout)
 	def item(id):
 		args = request.args.to_dict()
 		region = args.get('region', 'US')
