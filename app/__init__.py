@@ -105,6 +105,17 @@ def create_app(config_mode=None, config_file=None):
 
 		return jsonify({'objects': result}, status)
 
+	@app.route('/api/category/')
+	@app.route('%s/category/' % app.config['API_URL_PREFIX'])
+	@cache.cached(timeout=search_cache_timeout)
+	def category():
+		args = request.args.to_dict()
+		region = args.get('region', 'US')
+		trading = Trading(region=region)
+		cat_array = trading.get_categories().CategoryArray
+		response = cat_array.Category
+		return jsonify({'objects': trading.parse(response)})
+
 	@app.route('/api/category/<name>/subcategories/')
 	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=search_cache_timeout)
