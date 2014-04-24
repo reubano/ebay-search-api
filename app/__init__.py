@@ -88,15 +88,15 @@ def create_app(config_mode=None, config_file=None):
 		region = args.get('region', 'US')
 		finding = Finding(region=region)
 
-		kwargs = {
+		options = {
 			'paginationInput': {'entriesPerPage': 100, 'pageNumber': 1},
 			'sortOrder': 'EndTimeSoonest',
 		}
 
-		kwargs.update(args)
+		options.update(args)
 
 		try:
-			response = finding.search(**kwargs)
+			response = finding.search(options)
 			result = finding.parse(response)
 			status = 200
 		except ConnectionError as err:

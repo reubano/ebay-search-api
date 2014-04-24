@@ -28,7 +28,7 @@ def lint():
 @manager.command
 def testnose():
 	"""Run nosetests"""
-	check_call('nosetests', shell=True)
+	check_call('nosetests -xv', shell=True)
 
 
 @manager.command

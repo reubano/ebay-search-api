@@ -50,7 +50,7 @@ class Ebay(object):
 		Examples
 		--------
 		>>> Ebay()  #doctest: +ELLIPSIS
-		<Lego.api.Ebay object at 0x...>
+		<app.api.Ebay object at 0x...>
 		"""
 		self.global_ids = {
 			'US': {'finding': 'EBAY-US', 'trading': 0, 'currency': 'USD'},
@@ -121,7 +121,7 @@ class Trading(Ebay):
 		Examples
 		--------
 		>>> Trading(sandbox=True)  #doctest: +ELLIPSIS
-		<Lego.api.Trading object at 0x...>
+		<app.api.Trading object at 0x...>
 		"""
 		super(Trading, self).__init__(**kwargs)
 		site_id = self.global_ids[self.kwargs['country']]['trading']
@@ -198,7 +198,7 @@ class Trading(Ebay):
 		>>> id = categories[0]['CategoryID']['value']
 		>>> response = trading.get_hierarchy(id, level_limit=2)
 		>>> response.CategoryArray.Category[1]['CategoryName']['value']
-		'Antique Clocks'
+		'Antiquities'
 		"""
 		data = {
 			'CategoryParent': category_id,
@@ -234,10 +234,10 @@ class Trading(Ebay):
 
 		for r in response:
 			item = {
-				'id': r.CategoryID.value,
-				'category': r.CategoryName.value,
-				'level': r.CategoryLevel.value,
-				'parent_id': r.CategoryParentID.value,
+				'id': r.CategoryID,
+				'category': r.CategoryName,
+				'level': r.CategoryLevel,
+				'parent_id': r.CategoryParentID,
 			}
 
 			items.append(item)
@@ -263,7 +263,7 @@ class Trading(Ebay):
 		>>> response = trading.get_categories()
 		>>> results = trading.parse(response.CategoryArray.Category)
 		>>> trading.make_lookup(results).keys()[:3]
-		['Jewellery & Watches', 'Sporting Goods', 'Computers/Tablets & Networking']
+		['everything else', 'business & industrial', 'pet supplies']
 		"""
 		return {r['category'].lower(): r for r in results}
 
@@ -287,7 +287,7 @@ class Finding(Ebay):
 		Examples
 		--------
 		>>> Finding(sandbox=True)  #doctest: +ELLIPSIS
-		<Lego.api.Finding object at 0x...>
+		<app.api.Finding object at 0x...>
 		"""
 		super(Finding, self).__init__(**kwargs)
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
@@ -295,7 +295,7 @@ class Finding(Ebay):
 		self.kwargs.update({'domain': domain, 'siteid': site_id})
 		self.api = finding(**self.kwargs)
 
-	def search(self, **kwargs):
+	def search(self, options):
 		"""
 		Search eBay using the Finding API.
 
@@ -364,12 +364,12 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> Finding(sandbox=True).search(keywords='Harry Potter').keys()
+		>>> Finding(sandbox=True).search({'keywords': 'Harry Potter'}).keys()
 		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
 'searchResult', 'version']
 		"""
-		verb = kwargs.get('verb', 'findItemsAdvanced')
-		return self.execute(verb, kwargs)
+		verb = options.get('verb', 'findItemsAdvanced')
+		return self.execute(verb, options)
 
 	def parse(self, response):
 		"""
@@ -386,13 +386,10 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> request = Request()
-		>>> finding = Finding()
-		>>> search_kwargs = request.get_ebay_search_kwargs('18998')
-		>>> response = finding.search(**search_kwargs)
-		>>> finding.parse(response.searchResult.item).values()[0].keys()
-		['end_date', 'end_date_time', 'end_time', 'type', \
-'url', 'id', 'price_and_shipping', 'title']
+		>>> finding = Finding(sandbox=True)
+		>>> response = finding.search({'keywords': 'Harry Potter'})
+		>>> finding.parse(response).items()[0][1].keys()[:5]
+		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
 		"""
 		items = []
 		currency = self.global_ids[self.kwargs['country']]['currency']
