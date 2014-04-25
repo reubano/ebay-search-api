@@ -85,8 +85,8 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=search_cache_timeout)
 	def search():
 		args = request.args.to_dict()
-		region = args.get('region', 'US')
-		finding = Finding(region=region)
+		country = args.get('country', 'US')
+		finding = Finding(country=country)
 
 		options = {
 			'paginationInput': {'entriesPerPage': 100, 'pageNumber': 1},
@@ -110,8 +110,8 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=search_cache_timeout)
 	def category():
 		args = request.args.to_dict()
-		region = args.get('region', 'US')
-		trading = Trading(region=region)
+		country = args.get('country', 'US')
+		trading = Trading(country=country)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
 		return jsonify({'objects': trading.parse(response)})
@@ -122,8 +122,8 @@ def create_app(config_mode=None, config_file=None):
 	def sub_category(name):
 		name = name.lower()
 		args = request.args.to_dict()
-		region = args.get('region', 'US')
-		trading = Trading(region=region)
+		country = args.get('country', 'US')
+		trading = Trading(country=country)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
 		categories = trading.parse(response)
@@ -146,10 +146,10 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=search_cache_timeout)
 	def item(id):
 		args = request.args.to_dict()
-		region = args.get('region', 'US')
+		country = args.get('country', 'US')
 
 		try:
-			trading = Trading(region=region)
+			trading = Trading(country=country)
 			response = trading.get_item(id)
 			result = response.Item
 			status = 200
