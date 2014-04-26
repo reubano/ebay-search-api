@@ -393,6 +393,8 @@ class Finding(Ebay):
 		['results', 'pages']
 		>>> finding.parse(response)['results'].items()[0][1].keys()[:5]
 		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
+		>>> type(finding.parse(response)['pages'])
+		<type 'str'>
 		"""
 		items = []
 		currency = self.global_ids[self.kwargs['country']]['currency']
