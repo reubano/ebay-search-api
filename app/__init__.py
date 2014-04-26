@@ -88,16 +88,15 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/search/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def search():
-		args = request.args.to_dict()
-		country = args.get('country', 'US')
-		finding = Finding(country=country)
+		kwargs = request.args.to_dict()
+		finding = Finding(**kwargs)
 
 		options = {
 			'paginationInput': {'entriesPerPage': 100, 'pageNumber': 1},
 			'sortOrder': 'EndTimeSoonest',
 		}
 
-		options.update(args)
+		options.update(kwargs)
 
 		try:
 			response = finding.search(options)
@@ -113,9 +112,8 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/category/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def category():
-		args = request.args.to_dict()
-		country = args.get('country', 'US')
-		trading = Trading(country=country)
+		kwargs = request.args.to_dict()
+		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
 		return jsonify({'objects': trading.parse(response)})
@@ -125,9 +123,8 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def sub_category(name):
 		name = name.lower()
-		args = request.args.to_dict()
-		country = args.get('country', 'US')
-		trading = Trading(country=country)
+		kwargs = request.args.to_dict()
+		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
 		categories = trading.parse(response)
@@ -149,11 +146,10 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/item/<id>/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def item(id):
-		args = request.args.to_dict()
-		country = args.get('country', 'US')
+		kwargs = request.args.to_dict()
 
 		try:
-			trading = Trading(country=country)
+			trading = Trading(**kwargs)
 			response = trading.get_item(id)
 			result = response.Item
 			status = 200
