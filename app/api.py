@@ -29,7 +29,7 @@ class Andand(object):
 class Ebay(object):
 	"""A general Ebay API config object"""
 
-	def __init__(self, **kwargs):
+	def __init__(self, sandbox=False, **kwargs):
 		"""
 		Initialization method.
 
@@ -57,7 +57,7 @@ class Ebay(object):
 			'UK': {'finding': 'EBAY-GB', 'trading': 3, 'currency': 'GBP'},
 		}
 
-		self.sandbox = kwargs.get('sandbox', False)
+		self.sandbox = sandbox
 
 		if self.sandbox:
 			appid = 'ReubenCu-a3a3-4b38-a01a-b787f6f7bb0a'
