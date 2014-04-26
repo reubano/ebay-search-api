@@ -29,7 +29,7 @@ class Andand(object):
 class Ebay(object):
 	"""A general Ebay API config object"""
 
-	def __init__(self, sandbox=False, **kwargs):
+	def __init__(self, sandbox=False, appid=None, devid=None, **kwargs):
 		"""
 		Initialization method.
 
@@ -60,13 +60,13 @@ class Ebay(object):
 		self.sandbox = sandbox
 
 		if self.sandbox:
-			appid = 'ReubenCu-a3a3-4b38-a01a-b787f6f7bb0a'
+			appid = (appid or getenv('EBAY_SB_APP_ID'))
 		else:
-			appid = 'ReubenCu-dd45-46a1-b9fe-56f855e9ae71'
+			appid = (appid or getenv('EBAY_LIVE_APP_ID'))
 
 		self.kwargs = {
 			'appid': appid,
-			'devid': 'fdabe1b2-8cd0-46e4-bf04-1667ec962969',
+			'devid': (devid or getenv('EBAY_DEV_ID')),
 			'debug': kwargs.get('verbose', False),
 			'warnings': kwargs.get('verbose', False),
 			'errors': kwargs.get('errors', True),
@@ -105,7 +105,7 @@ class Ebay(object):
 class Trading(Ebay):
 	"""An Ebay Trading API object"""
 
-	def __init__(self, **kwargs):
+	def __init__(self, certid=None, token=None, **kwargs):
 		"""
 		Initialization method.
 
@@ -128,12 +128,12 @@ class Trading(Ebay):
 
 		if self.sandbox:
 			domain = 'api.sandbox.ebay.com'
-			certid = '84a062e6-505d-42e7-a862-3440624c4a61'
-			token = 'AgAAAA**AQAAAA**aAAAAA**YdAQUw**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wFk4GhC5mFoA6dj6x9nY+seQ**ZY0CAA**AAMAAA**vzX+oYzGaSZ1IOCxVZl0OGvru9RZRXxaPZDTtWaGQZSa8yWCaonskEFxxmyQOBclApnjwyiR8as6Ndm3ytrCPNMqJy76gNwlL030LaBNpAof7jDI42Mw1Nn36Akh9cCnSVmyzm0fyGEdyPO4qme1pEmyPwz6QDP2mTemqUUn6l4mNUhl02rOlCeiEUi8qvl0nU53bsK7PHP+xVsj4zi0Z0lL4+Qh6NGsBfd9/ZB1aNQhJVRHjPot7KlEkdFqmLjHVFjZ+a3jnfa4ni3TbfXAKFzB7HsRBumxujn70qStKzxB3jsQuM3b7qx/2J/5ydCsonDNokCn5tx47or6MDqjRYECJnE0c+92rtC4s8dT1feN4LvY9L2AoEpFeGFT8pFyk699E+ZJHJP6Af3rwgGNKmR3CSbYc70fSmChE7qKO1gASSqhCB4dRFSpckqaSVIYSbj01PidPWFKghvoAuJNp8A/fLBFypAuXJlqlJee1oY4x4fqgB/hhI0pzixg1PkuP9qTHsJTKaAuU+DsBol6j3++72yBN0FmHFGnrHHu8pqzscZc0Ebhc3Len5BzMSic+9Ypm5SiVuh+viAZbYJnEyqX3tjr2KEsbQwif9u5XoT0aMIsRQhaoGIehXNvl9hkS7/ebYgK+BVZJQmmzQp577gNwerAo93J5WAO7e9zxow//jzKaobFLBLm9YtgOv4/PIZsXccPDTlkHw3wpHtSbIfe5AdJLuef6ZTaorQks1sh5eGakk6tl+04FjQwVuL4'
+			certid = (certid or getenv('EBAY_SB_CERT_ID'))
+			token = (certid or getenv('EBAY_SB_TOKEN'))
 		else:
 			domain = 'api.ebay.com'
-			certid = '7c187051-74a6-4566-9e87-482200e05005'
-			token = 'AgAAAA**AQAAAA**aAAAAA**yOwQUw**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJkoWpCJaKpg+dj6x9nY+seQ**/iMCAA**AAMAAA**e33vxWHuVgf9AVDih4FqUJg/iihYvl8tvksaAVGo4XMgqewCP7ysfcui9cblPLrNgTiyJRgrk+WxG+hvTjxCVEHR0bQF36TUkHMyAv5vVzVQpeZDHV5GMo0vxsYOr5euTze1+E1V/8+JsXTYgqXl8qWrDoEqLuwi/GI2g2svvY08xL5ZmOHwNshkzUag4ctXXy27Wt0RkRbHqcl2KmdELNftz9rhowFEEaqgLG+8xrkthHrMAmp4BiQx9kaKrn5PVdL9NN1i/yXjeiEwSyrNurHirtZm4FKlxt++Vw446mEjwNj92I3x22lIIi3k9d9n7VMQ7UFFmZpz0LjV1tvfIuAXpbYUNbx2luRI4Z9ibmQv/V6IoJ4/0YEEqh8UePT2mWQSuJeyFRwfa2pgHsjkPZCjbjDAyWKYRfeHsIw0M3AOQbnsF/URM90qG5EBgBHwnDQmFSekeSt+xhAk+ANfdJ2udCiHRefO8QQKqNaKHw48S2SnX1QEmLkajEVr2gsX/lyyVp777s4UrDu8n5BGcQdb6idipSmPV5HFz/Vd1RaHzO3fcbKDmuZugbrQfKWyyQIkavZWRm1bllfVWeE6daKHL2ZmpKx7A7kCh+Di+YeyLdBK2Fa47lFjGMG7y436LVS7kuV4A1+tvzMqh32FiTviKYetRpY3MXhtXrv6GYlL35ew+lVxUDOVpgV/CFwoo0aS/w1oSZ7KnuT/j/HAAIEZilbkuRmNNqmA97nh0EowGqbcNeSIU//jIMWPlOB7'
+			certid = (certid or getenv('EBAY_LIVE_CERT_ID'))
+			token = (certid or getenv('EBAY_LIVE_TOKEN'))
 
 		self.kwargs.update({'site_id': site_id, 'domain': domain})
 		self.kwargs.update({'certid': certid, 'token': token})
