@@ -29,7 +29,7 @@ class Andand(object):
 class Ebay(object):
 	"""A general Ebay API config object"""
 
-	def __init__(self, sandbox=False, appid=None, devid=None, **kwargs):
+	def __init__(self, sandbox=False, **kwargs):
 		"""
 		Initialization method.
 
@@ -60,13 +60,13 @@ class Ebay(object):
 		self.sandbox = sandbox
 
 		if self.sandbox:
-			appid = (appid or getenv('EBAY_SB_APP_ID'))
+			appid = kwargs.get('appid', getenv('EBAY_SB_APP_ID'))
 		else:
-			appid = (appid or getenv('EBAY_LIVE_APP_ID'))
+			appid = kwargs.get('appid', getenv('EBAY_LIVE_APP_ID'))
 
 		self.kwargs = {
 			'appid': appid,
-			'devid': (devid or getenv('EBAY_DEV_ID')),
+			'devid': kwargs.get('devid', getenv('EBAY_DEV_ID')),
 			'debug': kwargs.get('verbose', False),
 			'warnings': kwargs.get('verbose', False),
 			'errors': kwargs.get('errors', True),
@@ -105,7 +105,7 @@ class Ebay(object):
 class Trading(Ebay):
 	"""An Ebay Trading API object"""
 
-	def __init__(self, certid=None, token=None, **kwargs):
+	def __init__(self, **kwargs):
 		"""
 		Initialization method.
 
@@ -124,19 +124,19 @@ class Trading(Ebay):
 		<app.api.Trading object at 0x...>
 		"""
 		super(Trading, self).__init__(**kwargs)
-		site_id = self.global_ids[self.kwargs['country']]['trading']
+		new = {'site_id': self.global_ids[self.kwargs['country']]['trading']}
+		self.kwargs.update(new)
 
 		if self.sandbox:
 			domain = 'api.sandbox.ebay.com'
-			certid = (certid or getenv('EBAY_SB_CERT_ID'))
-			token = (certid or getenv('EBAY_SB_TOKEN'))
+			certid = kwargs.get('certid', getenv('EBAY_SB_CERT_ID'))
+			token = kwargs.get('token', getenv('EBAY_SB_TOKEN'))
 		else:
 			domain = 'api.ebay.com'
-			certid = (certid or getenv('EBAY_LIVE_CERT_ID'))
-			token = (certid or getenv('EBAY_LIVE_TOKEN'))
+			certid = kwargs.get('certid', getenv('EBAY_LIVE_CERT_ID'))
+			token = kwargs.get('token', getenv('EBAY_LIVE_TOKEN'))
 
-		self.kwargs.update({'site_id': site_id, 'domain': domain})
-		self.kwargs.update({'certid': certid, 'token': token})
+		self.kwargs.update({'domain': domain, 'certid': certid, 'token': token})
 		self.api = trading(**self.kwargs)
 
 	def get_item(self, id):
