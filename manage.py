@@ -13,7 +13,6 @@ manager.add_option('-f', '--cfgfile', dest='config_file', type=p.abspath)
 @manager.command
 def checkstage():
 	"""Checks staged with git pre-commit hook"""
-
 	path = p.join(p.dirname(__file__), 'app', 'tests', 'test.sh')
 	cmd = "sh %s" % path
 	return call(cmd, shell=True)
