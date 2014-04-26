@@ -42,6 +42,10 @@ def corsify(response, methods):
 	return response
 
 
+def make_cache_key(*args, **kwargs):
+	return request.url
+
+
 def create_app(config_mode=None, config_file=None):
 	# Create webapp instance
 	app = Flask(__name__)
@@ -82,7 +86,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/search/')
 	@app.route('%s/search/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout)
+	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def search():
 		args = request.args.to_dict()
 		country = args.get('country', 'US')
@@ -107,7 +111,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/category/')
 	@app.route('%s/category/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout)
+	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def category():
 		args = request.args.to_dict()
 		country = args.get('country', 'US')
@@ -118,7 +122,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/category/<name>/subcategories/')
 	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout)
+	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def sub_category(name):
 		name = name.lower()
 		args = request.args.to_dict()
@@ -143,7 +147,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/item/<id>/')
 	@app.route('%s/item/<id>/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout)
+	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def item(id):
 		args = request.args.to_dict()
 		country = args.get('country', 'US')
