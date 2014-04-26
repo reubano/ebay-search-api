@@ -306,57 +306,58 @@ class Finding(Ebay):
 
 		Parameters
 		----------
-		verb : string
-			one of
-				findCompletedItems
-				findItemsAdvanced
-				findItemsByCategory
-				findItemsByImage
-				findItemsByKeywords
-				findItemsByProduct
-				findItemsIneBayStores
-				getHistograms
+		options : dict containing the following
+			verb : string
+				one of
+					findCompletedItems
+					findItemsAdvanced
+					findItemsByCategory
+					findItemsByImage
+					findItemsByKeywords
+					findItemsByProduct
+					findItemsIneBayStores
+					getHistograms
 
-		categoryId : integer
-		descriptionSearch : boolean
-		outputSelector : string
-			one of
-				SellerInfo
-				StoreInfo
-				AspectHistogram
-				CategoryHistogram
+			categoryId : integer
+			descriptionSearch : boolean
+			outputSelector : string
+				one of
+					SellerInfo
+					StoreInfo
+					AspectHistogram
+					CategoryHistogram
 
-		itemFilter : dict or list of dicts
-			{
-				'name': ItemFilterType,
-				'value': string,
-				'paramName': token (optional),
-				'paramValue': string (optional),
-			}
+			itemFilter : dict or list of dicts
+				{
+					'name': ItemFilterType,
+					'value': string,
+					'paramName': token (optional),
+					'paramValue': string (optional),
+				}
 
-		aspectFilter : dict
-			{'aspectName': AspectFilterType, 'aspectValueName': string}
+			aspectFilter : dict
+				{'aspectName': AspectFilterType, 'aspectValueName': string}
 
-		domainFilter : dict
-			{'domainName': DomainFilterType}
+			domainFilter : dict
+				{'domainName': DomainFilterType}
 
-		keywords : string
-		paginationInput : dict
-			{'entriesPerPage': int, 'pageNumber': int}
+			keywords : string
+			paginationInput : dict
+				{'entriesPerPage': int, 'pageNumber': int}
 
-		sortOrder : string
-			one of
-				BestMatch
-				BidCountFewest
-				BidCountMost
-				CountryAscending
-				CountryDescending
-				CurrentPriceHighest
-				DistanceNearest
-				EndTimeSoonest
-				PricePlusShippingHighest
-				PricePlusShippingLowest
-				StartTimeNewest
+			sortOrder : string
+				one of
+					BestMatch
+					BidCountFewest
+					BidCountMost
+					CountryAscending
+					CountryDescending
+					CurrentPriceHighest
+					DistanceNearest
+					EndTimeSoonest
+					PricePlusShippingHighest
+					PricePlusShippingLowest
+					StartTimeNewest
 
 		Returns
 		-------
@@ -368,7 +369,7 @@ class Finding(Ebay):
 		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
 'searchResult', 'version']
 		"""
-		verb = options.get('verb', 'findItemsAdvanced')
+		verb = options.pop('verb', 'findItemsAdvanced')
 		return self.execute(verb, options)
 
 	def parse(self, response):
