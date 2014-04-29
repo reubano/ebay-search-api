@@ -11,7 +11,8 @@ from ebaysdk import finding, trading
 
 
 def getenv_from_file(env, yml_file):
-	yml_file = p.join(yml_file)
+	parent = p.dirname(p.dirname(__file__))
+	yml_file = p.join(parent, yml_file)
 	result = yaml.load(file(yml_file, 'r'))
 	return result[env]
 
