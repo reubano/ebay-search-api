@@ -4,9 +4,16 @@
 
 
 import dateutil.parser as du
+import yaml
 
-from os import getenv
+from os import getenv, path as p
 from ebaysdk import finding, trading
+
+
+def getenv_from_file(env, yml_file):
+	yml_file = p.join(yml_file)
+	result = yaml.load(file(yml_file, 'r'))
+	return result[env]
 
 
 class Andand(object):
@@ -128,10 +135,14 @@ class Trading(Ebay):
 		new = {'site_id': self.global_ids[self.kwargs['country']]['trading']}
 		self.kwargs.update(new)
 
+		# for travis.ci since the value is too large for travis encrypt
+		env_file = 'envs.yml'
+
 		if self.sandbox:
 			domain = 'api.sandbox.ebay.com'
 			certid = kwargs.get('certid', getenv('EBAY_SB_CERT_ID'))
 			token = kwargs.get('token', getenv('EBAY_SB_TOKEN'))
+			token = (token or getenv_from_file('EBAY_SB_TOKEN', env_file))
 		else:
 			domain = 'api.ebay.com'
 			certid = kwargs.get('certid', getenv('EBAY_LIVE_CERT_ID'))
