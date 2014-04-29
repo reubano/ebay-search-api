@@ -33,8 +33,10 @@ def test():
 @manager.command
 def require():
 	"""Create requirements.txt"""
-	cmd = 'pip freeze -l | grep -vxFf dev-requirements.txt | grep -v csv2html '
-	cmd += '> requirements.txt'
+	cmd = 'pip freeze -l | grep -vxFf requirements/dev.txt '
+	cmd += '| grep -vxFf requirements/prod.txt '
+	cmd += '| grep -vxFf requirements/test.txt '
+	cmd += '> requirements/common.txt'
 	call(cmd, shell=True)
 
 
