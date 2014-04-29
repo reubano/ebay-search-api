@@ -16,8 +16,9 @@ from flask import Flask, redirect, url_for, request, make_response
 from flask.ext.cache import Cache
 
 cache = Cache()
-search_cache_timeout = 1 * 60 * 60  # hours (in seconds)
-
+search_cache_timeout = 60 * 60  # hours (in seconds)
+category_cache_timeout = 60 * 60 * 24 * 7  # days (in seconds)
+sub_category_cache_timeout = 60 * 60 * 24 * 1  # days (in seconds)
 
 def jsonify(status=200, indent=2, sort_keys=True, **kwargs):
 	options = {'indent': indent, 'sort_keys': sort_keys}
@@ -107,7 +108,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/category/')
 	@app.route('%s/category/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
+	@cache.cached(timeout=category_cache_timeout, key_prefix=make_cache_key)
 	def category():
 		kwargs = request.args.to_dict()
 		trading = Trading(**kwargs)
@@ -117,7 +118,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/api/category/<name>/subcategories/')
 	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
+	@cache.cached(timeout=sub_category_cache_timeout, key_prefix=make_cache_key)
 	def sub_category(name):
 		name = name.lower()
 		kwargs = request.args.to_dict()
