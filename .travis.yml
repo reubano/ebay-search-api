@@ -1,38 +1,37 @@
 language: python
-
 python:
-  - "2.7"
-  - "2.6"
-  - "pypy"
-
+- '2.7'
 notifications:
   email:
     on_success: always
-
+before_install:
+- sudo apt-get install libevent-dev
 install: pip install -r requirements/test.txt
+before_script:
+- openssl aes-256-cbc -d -k "$secret" -in envs.yml.enc -a -out envs.yml
 script: python manage.py test
-
 after_success:
-  # check for pull request and correct python version
-  - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then exit 0; fi
-
-  # Install heroku toolbelt
-  - wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
-
-  # check branch to conditionally add remote repo
-  - REPO_NAME=`basename $TRAVIS_REPO_SLUG`
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then git remote add production git@heroku.com:${REPO_NAME}.git; fi
-  - if [[ "$TRAVIS_BRANCH" == "features" ]]; then git remote add staging git@heroku.com:${REPO_NAME}-stage.git; fi
-
-  # Turn off warnings about SSH keys:
-  - echo "Host heroku.com" >> ~/.ssh/config
-  - echo "   StrictHostKeyChecking no" >> ~/.ssh/config
-  - echo "   CheckHostIP no" >> ~/.ssh/config
-  - echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-  - heroku keys:clear
-  - yes | heroku keys:add
-
-  # check branch for conditional push
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then yes | git push production master; fi
-  - if [[ "$TRAVIS_BRANCH" == "features" ]]; then yes | git push staging features:master; fi
+- if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
+- if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then exit 0; fi
+- wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
+- REPO_NAME=`basename $TRAVIS_REPO_SLUG`
+- if [[ "$TRAVIS_BRANCH" == "master" ]]; then git remote add production git@heroku.com:${REPO_NAME}.git;
+  fi
+- if [[ "$TRAVIS_BRANCH" == "features" ]]; then git remote add staging git@heroku.com:${REPO_NAME}-stage.git;
+  fi
+- echo "Host heroku.com" >> ~/.ssh/config
+- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
+- echo "   CheckHostIP no" >> ~/.ssh/config
+- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+- heroku keys:clear
+- yes | heroku keys:add
+- if [[ "$TRAVIS_BRANCH" == "master" ]]; then yes | git push production master; fi
+- if [[ "$TRAVIS_BRANCH" == "features" ]]; then yes | git push staging features:master;
+  fi
+env:
+  global:
+  - secure: Ngem5DLc2hunGbazgciwRImGGDJgZZfHwk0FtxbYUlwj+C5KwN9oOagFWQPI2XU/brKx6vVOdjUW5ZLwyit893T02sw4FI4DR4TRPTkbXUl92+LAvub54JuxryzPxNZxyPS0pV3e7fyQjLLggZNBviKZ/+CHwFtmnHSXHVJWPFk=
+  - secure: iTWueWXEyiWqu5HjrM2GXyyO3rNu/k0MGcU1n5aBwQ61J9T1LGBTyhDCNsyg8UQ720upWbiDoDho/28UadC9VzNTj0GGUGRn6FillMpg6g8DTsELJ9vmzSU4RyD/WlbPp9dKCLjbIEmxJOhtv9z4oB9uDZLao54bwTnqw3z2CGY=
+  - secure: b2LackUXhQ3jX0gR+G4Fa+lP0mxfR58bC2+KJG7qiWrdqTT5tMz5XVKJw+xEVSA/OQSiKUD+LP53rQQWHc8THQGfES2ncAS+Jeh/hqcQKaSNhofZvtXAGw5KOfXp8TfyuSnDILDjVFPyfsKRrOGM4dCZlRgrZyp768jbqVUapXg=
+  - secure: APpF9dry625ppr4v+au7FHOU64cdGYvR/JUGT77X3LFr463yr9cG4XaqrycwmvH49KwIu5o4CyL/3XY6sHkr1N6Av0KbEouwRLfGF/UZc0km5G+B5g0Qrec//FzN1ZLisJW104DymcgvQhlPVeQN2p1qVfL+IbZ4fxi4W1M9WjI=
+  - secure: QMBQMXu7bV/txDRmDgd+aQ6p328eN4W6g0E4gprp58tnwXlEkl63xeAMmFtctGZHZvRyyMG0HmJPF4Hn0OP1wNwCqdLe11Ds0GfCBq+MvcEpNdhb42BbyXwkPcxtSFu1dtx3JiLzeZ6ZSgdR9wWNG43QHwVTel8+UlCa1Fv6S9U=
