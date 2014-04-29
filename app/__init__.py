@@ -19,8 +19,9 @@ cache = Cache()
 search_cache_timeout = 1 * 60 * 60  # hours (in seconds)
 
 
-def jsonify(result, status=200):
-	response = make_response(dumps(result, cls=CustomEncoder))
+def jsonify(status=200, indent=2, sort_keys=True, **kwargs):
+	options = {'indent': indent, 'sort_keys': sort_keys}
+	response = make_response(dumps(kwargs, cls=CustomEncoder, **options))
 	response.headers['Content-Type'] = 'application/json; charset=utf-8'
 	response.headers['mimetype'] = 'application/json'
 	response.status_code = status
@@ -102,7 +103,7 @@ def create_app(config_mode=None, config_file=None):
 			result = err.message
 			status = 500
 
-		return jsonify({'objects': result}, status)
+		return jsonify(status, objects=result)
 
 	@app.route('/api/category/')
 	@app.route('%s/category/' % app.config['API_URL_PREFIX'])
@@ -112,7 +113,7 @@ def create_app(config_mode=None, config_file=None):
 		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
-		return jsonify({'objects': trading.parse(response)})
+		return jsonify(objects=trading.parse(response))
 
 	@app.route('/api/category/<name>/subcategories/')
 	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
@@ -136,7 +137,7 @@ def create_app(config_mode=None, config_file=None):
 			result = "Category %s doesn't exist" % name
 			status = 500
 
-		return jsonify({'objects': result}, status)
+		return jsonify(status, objects=result)
 
 	@app.route('/api/item/<id>/')
 	@app.route('%s/item/<id>/' % app.config['API_URL_PREFIX'])
@@ -153,13 +154,13 @@ def create_app(config_mode=None, config_file=None):
 			result = err.message
 			status = 500
 
-		return jsonify({'objects': result}, status)
+		return jsonify(status, objects=result)
 
 	@app.route('/api/reset/')
 	@app.route('%s/reset/' % app.config['API_URL_PREFIX'])
 	def reset():
 		cache.clear()
-		return jsonify({'objects': "Caches reset"})
+		return jsonify(objects="Caches reset")
 
 	@app.after_request
 	def add_cors_header(response):
