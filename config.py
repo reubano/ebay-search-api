@@ -1,16 +1,26 @@
-import os
-from os import path as p
+from os import getenv
+from slugify import slugify
 
-_basedir = p.dirname(__file__)
-_user = os.environ.get('USER', os.environ.get('USERNAME', 'default'))
+# module vars
+_user = getenv('USER', getenv('USERNAME', 'default'))
+
+# configurable vars
+__APP_NAME__ = 'eBay Search API'
+__YOUR_NAME__ = 'Reuben Cummings'
 __YOUR_EMAIL__ = '%s@gmail.com' % _user
+__YOUR_WEBSITE__ = 'http://%s.github.com' % _user
 
 
 # configuration
 class Config(object):
-	app = 'ebay-search-api'
-	HEROKU = os.environ.get('DATABASE_URL', False)
+	app = slugify(__APP_NAME__)
+	stage = getenv('STAGE', False)
+	end = '-stage' if stage else ''
+	# TODO: programatically get app name
+	heroku_server = '%s%s.herokuapp.com' % (app, end)
 
+	APP_NAME = __APP_NAME__
+	HEROKU = getenv('HEROKU', False)
 	DEBUG = False
 	DEBUG_MEMCACHE = True
 	ADMINS = frozenset([__YOUR_EMAIL__])
@@ -18,9 +28,8 @@ class Config(object):
 	HOST = '127.0.0.1'
 
 	if HEROKU:
-		SERVER_NAME = '%s.herokuapp.com' % app
+		SERVER_NAME = heroku_server
 
-	SECRET_KEY = os.environ.get('SECRET_KEY', 'key')
 	API_METHODS = ['GET']
 	API_MAX_RESULTS_PER_PAGE = 1000
 	API_URL_PREFIX = '/api/v1'

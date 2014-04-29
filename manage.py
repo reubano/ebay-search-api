@@ -30,11 +30,19 @@ def test():
 	check_call('nosetests -xv', shell=True)
 
 
+@manager.option('-r', '--requirement', help='Requirement file', default='all')
+def pipme(requirement):
+	"""Install requirements.txt"""
+	call('pippy -r requirements/%s.txt' % requirement, shell=True)
+
+
 @manager.command
 def require():
 	"""Create requirements.txt"""
-	cmd = 'pip freeze -l | grep -vxFf dev-requirements.txt | grep -v csv2html '
-	cmd += '> requirements.txt'
+	cmd = 'pip freeze -l | grep -vxFf requirements/dev.txt '
+	cmd += '| grep -vxFf requirements/prod.txt '
+	cmd += '| grep -vxFf requirements/test.txt '
+	cmd += '> requirements/common.txt'
 	call(cmd, shell=True)
 
 

@@ -64,6 +64,7 @@ class Ebay(object):
 		else:
 			appid = kwargs.get('appid', getenv('EBAY_LIVE_APP_ID'))
 
+		# TODO: look into defaultdict
 		self.kwargs = {
 			'appid': appid,
 			'devid': kwargs.get('devid', getenv('EBAY_DEV_ID')),
