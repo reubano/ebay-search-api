@@ -1,7 +1,6 @@
 language: python
 python:
 - '2.7'
-- '2.6'
 notifications:
   email:
     on_success: always
@@ -34,5 +33,3 @@ env:
   - secure: Ngem5DLc2hunGbazgciwRImGGDJgZZfHwk0FtxbYUlwj+C5KwN9oOagFWQPI2XU/brKx6vVOdjUW5ZLwyit893T02sw4FI4DR4TRPTkbXUl92+LAvub54JuxryzPxNZxyPS0pV3e7fyQjLLggZNBviKZ/+CHwFtmnHSXHVJWPFk=
   - secure: iTWueWXEyiWqu5HjrM2GXyyO3rNu/k0MGcU1n5aBwQ61J9T1LGBTyhDCNsyg8UQ720upWbiDoDho/28UadC9VzNTj0GGUGRn6FillMpg6g8DTsELJ9vmzSU4RyD/WlbPp9dKCLjbIEmxJOhtv9z4oB9uDZLao54bwTnqw3z2CGY=
   - secure: b2LackUXhQ3jX0gR+G4Fa+lP0mxfR58bC2+KJG7qiWrdqTT5tMz5XVKJw+xEVSA/OQSiKUD+LP53rQQWHc8THQGfES2ncAS+Jeh/hqcQKaSNhofZvtXAGw5KOfXp8TfyuSnDILDjVFPyfsKRrOGM4dCZlRgrZyp768jbqVUapXg=
-  - secure: Y5nVUcDHPQtFPfRsAJnQj4Gtwu896H898oBFC6so0obCp6sEkEVule0PP6bVLKZIpAmkIVa5xCKI8J7jqf9v0qvL2U+kPSZh15K9XUvYpYt98/XKqPOpTv1or33PW1YS7PITaQ0iFMb6u4Z8CT/5iy5M613lJNvTMcLt758OAx0=
-  - secure: NbA8Q4I85r2XrCTXsw/cTyBmQxSZw/w+Sqmrwf/ayRy1uRfzN85OpDmDgPy9DWFweFR2L0FN+d+z6Db8coeIiqk7dbvQ9O3gklAyKU11w5HtxeUquel+6fYb4qxlZ8j8DXfkGQxBBKk9XV+YSt5RtBMpO8UegdwxFQ0SHJrE3vM=
