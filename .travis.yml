@@ -14,7 +14,7 @@ before_install:
 
 install: pip install -r requirements/test.txt
 before_script:
-- openssl aes-256-cbc -d -a -k "$secret" -in envs.yml.enc -out envs.yml
+  - openssl aes-256-cbc -d -k "$secret" -in envs.yml.enc -a -out envs.yml
 
 script: python manage.py test
 
@@ -45,7 +45,6 @@ after_success:
 
 env:
   global:
-  - secure: Ngem5DLc2hunGbazgciwRImGGDJgZZfHwk0FtxbYUlwj+C5KwN9oOagFWQPI2XU/brKx6vVOdjUW5ZLwyit893T02sw4FI4DR4TRPTkbXUl92+LAvub54JuxryzPxNZxyPS0pV3e7fyQjLLggZNBviKZ/+CHwFtmnHSXHVJWPFk=
-  - secure: iTWueWXEyiWqu5HjrM2GXyyO3rNu/k0MGcU1n5aBwQ61J9T1LGBTyhDCNsyg8UQ720upWbiDoDho/28UadC9VzNTj0GGUGRn6FillMpg6g8DTsELJ9vmzSU4RyD/WlbPp9dKCLjbIEmxJOhtv9z4oB9uDZLao54bwTnqw3z2CGY=
-  - secure: b2LackUXhQ3jX0gR+G4Fa+lP0mxfR58bC2+KJG7qiWrdqTT5tMz5XVKJw+xEVSA/OQSiKUD+LP53rQQWHc8THQGfES2ncAS+Jeh/hqcQKaSNhofZvtXAGw5KOfXp8TfyuSnDILDjVFPyfsKRrOGM4dCZlRgrZyp768jbqVUapXg=
-  - secure: AhQC0tGsx6uR9jEJQGl6n8zmjfUWFpAygwJc9LjgMbIcGXFGdXb6tLj/lgVUBQiyj13LGm4fdv6RB1y0s1r5HgY5Q3QgBS4AXONlzFcpHYCBKhkT1xNMoBSPPqoxIOq3NHIodZi4YWzvEILw8uWm+8Z8xueSe+bvckhEMV2n2lY=
+    - secure: Ngem5DLc2hunGbazgciwRImGGDJgZZfHwk0FtxbYUlwj+C5KwN9oOagFWQPI2XU/brKx6vVOdjUW5ZLwyit893T02sw4FI4DR4TRPTkbXUl92+LAvub54JuxryzPxNZxyPS0pV3e7fyQjLLggZNBviKZ/+CHwFtmnHSXHVJWPFk=
+    - secure: iTWueWXEyiWqu5HjrM2GXyyO3rNu/k0MGcU1n5aBwQ61J9T1LGBTyhDCNsyg8UQ720upWbiDoDho/28UadC9VzNTj0GGUGRn6FillMpg6g8DTsELJ9vmzSU4RyD/WlbPp9dKCLjbIEmxJOhtv9z4oB9uDZLao54bwTnqw3z2CGY=
+    - secure: b2LackUXhQ3jX0gR+G4Fa+lP0mxfR58bC2+KJG7qiWrdqTT5tMz5XVKJw+xEVSA/OQSiKUD+LP53rQQWHc8THQGfES2ncAS+Jeh/hqcQKaSNhofZvtXAGw5KOfXp8TfyuSnDILDjVFPyfsKRrOGM4dCZlRgrZyp768jbqVUapXg=
