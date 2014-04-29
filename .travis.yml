@@ -10,6 +10,9 @@ notifications:
     on_success: always
 
 install: pip install -r requirements/test.txt
+before_script:
+- openssl aes-256-cbc -d -a -k "$secret" -in envs.yml.enc -out envs.yml
+
 script: python manage.py test
 
 after_success:
