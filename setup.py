@@ -14,7 +14,7 @@ config = {
 	'long_description': open('README.rst', 'rt').read(),
 	'author': 'Reuben Cummings',
 	'author_email': 'reubano@gmail.com',
-	'version': '1.1.0',
+	'version': '1.1.1',
 	'install_requires': requirements.split('\n'),
 	'classifiers': [
 		'Development Status :: 4 - Beta',
