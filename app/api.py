@@ -386,7 +386,7 @@ class Finding(Ebay):
 		>>> response.keys()
 		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
 'searchResult', 'version']
-		>>> finding = Finding()
+		>>> finding = Finding(country='UK')
 		>>> response = finding.search(opts)
 		>>> response.keys()
 		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
