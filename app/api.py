@@ -301,6 +301,8 @@ class Finding(Ebay):
 		--------
 		>>> Finding(sandbox=True)  #doctest: +ELLIPSIS
 		<app.api.Finding object at 0x...>
+		>>> Finding()  #doctest: +ELLIPSIS
+		<app.api.Finding object at 0x...>
 		"""
 		super(Finding, self).__init__(**kwargs)
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
@@ -378,7 +380,15 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> Finding(sandbox=True).search({'keywords': 'Harry Potter'}).keys()
+		>>> finding = Finding(sandbox=True)
+		>>> opts = {'keywords': 'Harry Potter'}
+		>>> response = finding.search(opts)
+		>>> response.keys()
+		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
+'searchResult', 'version']
+		>>> finding = Finding(country='UK')
+		>>> response = finding.search(opts)
+		>>> response.keys()
 		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
 'searchResult', 'version']
 		"""
@@ -400,14 +410,23 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> finding = Finding(sandbox=True)
-		>>> response = finding.search({'keywords': 'Harry Potter'})
-		>>> finding.parse(response).keys()
+		>>> finding = Finding(country='UK')
+		>>> opts = {'keywords': 'Harry Potter'}
+		>>> response = finding.search(opts)
+		>>> parsed = finding.parse(response)
+		>>> parsed.keys()
 		['results', 'pages']
-		>>> finding.parse(response)['results'].items()[0][1].keys()[:5]
-		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
-		>>> type(finding.parse(response)['pages'])
+		>>> type(parsed['pages'])
 		<type 'str'>
+		>>> items = parsed['results'].items()
+		>>> items[0][1].keys()[:5]
+		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
+		>>> url = items[0][1]['url']
+		>>> split = url.split('/')[2].split('.')
+		>>> '.'.join(split[2:])
+		'co.uk'
+		>>> split[0]
+		'www'
 		"""
 		items = []
 		currency = self.global_ids[self.kwargs['country']]['currency']
