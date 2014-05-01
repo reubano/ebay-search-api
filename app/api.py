@@ -419,11 +419,12 @@ class Finding(Ebay):
 		>>> type(parsed['pages'])
 		<type 'str'>
 		>>> items = parsed['results'].items()
-		>>> items[0][1].keys()[:5]
+		>>> item = items[0][1]
+		>>> item.keys()[:5]
 		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
-		>>> url = items[0][1]['url']
+		>>> url = item['url']
 		>>> split = url.split('/')[2].split('.')
-		>>> '.'.join(split[2:])
+		>>> '.'.join(split[-2:])
 		'co.uk'
 		>>> split[0]
 		'www'
