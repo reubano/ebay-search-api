@@ -400,7 +400,7 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> finding = Finding(sandbox=True)
+		>>> finding = Finding(country='UK')
 		>>> opts = {'keywords': 'Harry Potter'}
 		>>> response = finding.search(opts)
 		>>> parsed = finding.parse(response)
@@ -411,6 +411,12 @@ class Finding(Ebay):
 		>>> items = parsed['results'].items()
 		>>> items[0][1].keys()[:5]
 		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
+		>>> url = items[0][1]['url']
+		>>> split = url.split('/')[2].split('.')
+		>>> '.'.join(split[2:])
+		'co.uk'
+		>>> split[0]
+		'www'
 		"""
 		items = []
 		currency = self.global_ids[self.kwargs['country']]['currency']
