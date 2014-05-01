@@ -301,6 +301,8 @@ class Finding(Ebay):
 		--------
 		>>> Finding(sandbox=True)  #doctest: +ELLIPSIS
 		<app.api.Finding object at 0x...>
+		>>> Finding()  #doctest: +ELLIPSIS
+		<app.api.Finding object at 0x...>
 		"""
 		super(Finding, self).__init__(**kwargs)
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
