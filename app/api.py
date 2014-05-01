@@ -403,6 +403,9 @@ class Finding(Ebay):
 		>>> finding = Finding(country='UK')
 		>>> opts = {'keywords': 'Harry Potter'}
 		>>> response = finding.search(opts)
+		>>> response.keys()
+		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
+'searchResult', 'version']
 		>>> parsed = finding.parse(response)
 		>>> parsed.keys()
 		['results', 'pages']
