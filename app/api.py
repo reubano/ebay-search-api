@@ -378,7 +378,15 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> Finding(sandbox=True).search({'keywords': 'Harry Potter'}).keys()
+		>>> finding = Finding(sandbox=True)
+		>>> opts = {'keywords': 'Harry Potter'}
+		>>> response = finding.search(opts)
+		>>> response.keys()
+		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
+'searchResult', 'version']
+		>>> finding = Finding()
+		>>> response = finding.search(opts)
+		>>> response.keys()
 		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
 'searchResult', 'version']
 		"""
@@ -403,9 +411,6 @@ class Finding(Ebay):
 		>>> finding = Finding(country='UK')
 		>>> opts = {'keywords': 'Harry Potter'}
 		>>> response = finding.search(opts)
-		>>> response.keys()
-		['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
-'searchResult', 'version']
 		>>> parsed = finding.parse(response)
 		>>> parsed.keys()
 		['results', 'pages']
