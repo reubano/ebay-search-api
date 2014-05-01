@@ -299,10 +299,14 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> Finding(sandbox=True)  #doctest: +ELLIPSIS
+		>>> finding = Finding(sandbox=True)
+		>>> finding  #doctest: +ELLIPSIS
 		<app.api.Finding object at 0x...>
-		>>> Finding()  #doctest: +ELLIPSIS
-		<app.api.Finding object at 0x...>
+		>>> finding.kwargs['domain']
+		'svcs.sandbox.ebay.com'
+		>>> finding = Finding(sandbox=False)
+		>>> finding.kwargs['domain']
+		'svcs.ebay.com'
 		"""
 		super(Finding, self).__init__(**kwargs)
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
