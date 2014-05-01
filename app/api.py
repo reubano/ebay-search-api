@@ -401,12 +401,15 @@ class Finding(Ebay):
 		Examples
 		--------
 		>>> finding = Finding(sandbox=True)
-		>>> response = finding.search({'keywords': 'Harry Potter'})
-		>>> finding.parse(response).keys()
+		>>> opts = {'keywords': 'Harry Potter'}
+		>>> response = finding.search(opts)
+		>>> parsed = finding.parse(response)
+		>>> parsed.keys()
 		['results', 'pages']
-		>>> finding.parse(response)['results'].items()[0][1].keys()[:5]
+		>>> items = parsed['results'].items()
+		>>> items[0][1].keys()[:5]
 		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
-		>>> type(finding.parse(response)['pages'])
+		>>> type(parsed['pages'])
 		<type 'str'>
 		"""
 		items = []
