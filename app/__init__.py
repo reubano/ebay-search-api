@@ -8,7 +8,7 @@
 import config
 
 from os import getenv
-from json import JSONEncoder, dumps
+from json import JSONEncoder, dumps, loads
 from urllib import unquote
 from api import Trading, Finding
 from ebaysdk.exception import ConnectionError
@@ -19,6 +19,7 @@ cache = Cache()
 search_cache_timeout = 60 * 60  # hours (in seconds)
 category_cache_timeout = 60 * 60 * 24 * 7  # days (in seconds)
 sub_category_cache_timeout = 60 * 60 * 24 * 1  # days (in seconds)
+encoding = 'utf8'
 
 def jsonify(status=200, indent=2, sort_keys=True, **kwargs):
 	options = {'indent': indent, 'sort_keys': sort_keys}
@@ -46,6 +47,14 @@ def corsify(response, methods):
 
 def make_cache_key(*args, **kwargs):
 	return request.url
+
+
+def str2bool(string):
+	string = string.encode(encoding).lower()
+	if string in ('true', 'false'):
+		return loads(string.lower())
+	else:
+		return string
 
 
 def create_app(config_mode=None, config_file=None):
@@ -87,6 +96,7 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def search():
 		kwargs = request.args.to_dict()
+		kwargs = {k: str2bool(v) for k, v in kwargs.iteritems()}
 		finding = Finding(**kwargs)
 
 		options = {

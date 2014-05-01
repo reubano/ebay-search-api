@@ -299,10 +299,14 @@ class Finding(Ebay):
 
 		Examples
 		--------
-		>>> Finding(sandbox=True)  #doctest: +ELLIPSIS
+		>>> finding = Finding(sandbox=True)
+		>>> finding  #doctest: +ELLIPSIS
 		<app.api.Finding object at 0x...>
-		>>> Finding()  #doctest: +ELLIPSIS
-		<app.api.Finding object at 0x...>
+		>>> finding.kwargs['domain']
+		'svcs.sandbox.ebay.com'
+		>>> finding = Finding(sandbox=False)
+		>>> finding.kwargs['domain']
+		'svcs.ebay.com'
 		"""
 		super(Finding, self).__init__(**kwargs)
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
@@ -419,11 +423,12 @@ class Finding(Ebay):
 		>>> type(parsed['pages'])
 		<type 'str'>
 		>>> items = parsed['results'].items()
-		>>> items[0][1].keys()[:5]
+		>>> item = items[0][1]
+		>>> item.keys()[:5]
 		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
-		>>> url = items[0][1]['url']
+		>>> url = item['url']
 		>>> split = url.split('/')[2].split('.')
-		>>> '.'.join(split[2:])
+		>>> '.'.join(split[-2:])
 		'co.uk'
 		>>> split[0]
 		'www'
