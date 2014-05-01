@@ -30,7 +30,7 @@ def test():
 	check_call('nosetests -xv', shell=True)
 
 
-@manager.option('-r', '--requirement', help='Requirement file', default='all')
+@manager.option('-r', '--requirement', help='Requirement file', default='dev')
 def pipme(requirement):
 	"""Install requirements.txt"""
 	call('pippy -r requirements/%s.txt' % requirement, shell=True)
