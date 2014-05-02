@@ -50,8 +50,8 @@ def make_cache_key(*args, **kwargs):
 
 
 def str2bool(string):
-	string = string.encode(encoding).lower()
-	if string in ('true', 'false'):
+	string = string.encode(encoding)
+	if string.lower() in ('true', 'false'):
 		return loads(string.lower())
 	else:
 		return string
