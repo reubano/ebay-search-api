@@ -129,8 +129,14 @@ class Trading(Ebay):
 
 		Examples
 		--------
-		>>> Trading(sandbox=True)  #doctest: +ELLIPSIS
+		>>> trading = Trading(sandbox=True)
+		>>> trading  #doctest: +ELLIPSIS
 		<app.api.Trading object at 0x...>
+		>>> trading.api.config.values['siteid']
+		0
+		>>> trading = Trading(sandbox=True, country='UK')
+		>>> trading.api.config.values['siteid']
+		3
 		"""
 		super(Trading, self).__init__(**kwargs)
 
@@ -186,8 +192,12 @@ class Trading(Ebay):
 		--------
 		>>> trading = Trading(sandbox=True)
 		>>> categories = trading.get_categories().CategoryArray.Category
-		>>> categories[0]['CategoryName']['value']
-		'Antiques'
+		>>> categories[3]['CategoryName']['value']
+		'Books'
+		>>> trading = Trading(sandbox=True, country='UK')
+		>>> categories = trading.get_categories().CategoryArray.Category
+		>>> categories[3]['CategoryName']['value']
+		'Books, Comics & Magazines'
 		"""
 		data = {'DetailLevel': 'ReturnAll', 'LevelLimit': 1}
 		return self.execute('GetCategories', data)
