@@ -63,6 +63,11 @@ class Ebay(object):
 		self.global_ids = {
 			'US': {'finding': 'EBAY-US', 'trading': 0, 'currency': 'USD'},
 			'UK': {'finding': 'EBAY-GB', 'trading': 3, 'currency': 'GBP'},
+			'FR': {'finding': 'EBAY-FR', 'trading': 71, 'currency': 'EUR'},
+			'DE': {'finding': 'EBAY-DE', 'trading': 77, 'currency': 'EUR'},
+			'IT': {'finding': 'EBAY-IT', 'trading': 101, 'currency': 'EUR'},
+			'ES': {'finding': 'EBAY-ES', 'trading': 186, 'currency': 'EUR'},
+			'CA': {'finding': 'EBAY-ENCA', 'trading': 2, 'currency': 'CAD'},
 		}
 
 		self.sandbox = sandbox
