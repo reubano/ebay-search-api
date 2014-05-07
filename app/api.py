@@ -274,6 +274,7 @@ class Trading(Ebay):
 				'category': r.CategoryName,
 				'level': r.CategoryLevel,
 				'parent_id': r.CategoryParentID,
+				'country': self.kwargs['country'],
 			}
 
 			items.append(item)
@@ -506,6 +507,7 @@ class Finding(Ebay):
 				'end_date_time': end_date_time,
 				'end_date': end_date,
 				'end_time': end_time,
+				'country': self.kwargs['country'],
 				'currency': currency,
 			}
 
