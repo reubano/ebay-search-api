@@ -136,7 +136,6 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=sub_category_cache_timeout, key_prefix=make_cache_key)
 	def sub_category(name):
-		name = name.lower()
 		kwargs = request.args.to_dict()
 		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
@@ -145,13 +144,15 @@ def create_app(config_mode=None, config_file=None):
 		lookup = trading.make_lookup(categories)
 
 		try:
-			cat_id = lookup[unquote(name)]['id']
+			cat_id = lookup[unquote(name.lower())]['id']
 			hier_array = trading.get_hierarchy(cat_id).CategoryArray
 			response = hier_array.Category
 			result = trading.parse(response)
 			status = 200
 		except KeyError:
-			result = "Category %s doesn't exist" % name
+			url = request.url.replace('%s/subcategories/' % name, '')
+			msg = "Category %s doesn't exist. View %s to see valid categories."
+			result = msg % (name, url)
 			status = 500
 
 		return jsonify(status, objects=result)
