@@ -13,15 +13,15 @@ manager.add_option('-f', '--cfgfile', dest='config_file', type=p.abspath)
 @manager.command
 def checkstage():
 	"""Checks staged with git pre-commit hook"""
-	path = p.join(p.dirname(__file__), 'app', 'tests', 'test.sh')
+	path = p.join(p.dirname(__file__), 'tests', 'test.sh')
 	cmd = "sh %s" % path
 	return call(cmd, shell=True)
 
 
-@manager.command
-def lint():
+@manager.option('-F', '--file', help='Lint file', default='')
+def lint(file):
 	"""Check style with flake8"""
-	call('flake8', shell=True)
+	return call("flake8 %s" % file, shell=True)
 
 
 @manager.command
