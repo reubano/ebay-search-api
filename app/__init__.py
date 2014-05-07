@@ -42,7 +42,6 @@ def corsify(response, methods):
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	response.headers['Access-Control-Allow-Methods'] = base
 	response.headers['Access-Control-Allow-Headers'] = headers
-
 	response.headers['Access-Control-Allow-Credentials'] = 'true'
 	return response
 
