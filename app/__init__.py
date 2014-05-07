@@ -126,6 +126,7 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=category_cache_timeout, key_prefix=make_cache_key)
 	def category():
 		kwargs = request.args.to_dict()
+		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
 		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
@@ -136,6 +137,7 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=sub_category_cache_timeout, key_prefix=make_cache_key)
 	def sub_category(name):
 		kwargs = request.args.to_dict()
+		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
 		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
@@ -161,6 +163,7 @@ def create_app(config_mode=None, config_file=None):
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def item(id):
 		kwargs = request.args.to_dict()
+		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
 
 		try:
 			trading = Trading(**kwargs)
