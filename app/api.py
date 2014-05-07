@@ -63,6 +63,11 @@ class Ebay(object):
 		self.global_ids = {
 			'US': {'finding': 'EBAY-US', 'trading': 0, 'currency': 'USD'},
 			'UK': {'finding': 'EBAY-GB', 'trading': 3, 'currency': 'GBP'},
+			'FR': {'finding': 'EBAY-FR', 'trading': 71, 'currency': 'EUR'},
+			'DE': {'finding': 'EBAY-DE', 'trading': 77, 'currency': 'EUR'},
+			'IT': {'finding': 'EBAY-IT', 'trading': 101, 'currency': 'EUR'},
+			'ES': {'finding': 'EBAY-ES', 'trading': 186, 'currency': 'EUR'},
+			'CA': {'finding': 'EBAY-ENCA', 'trading': 2, 'currency': 'CAD'},
 		}
 
 		self.sandbox = sandbox
@@ -129,14 +134,18 @@ class Trading(Ebay):
 
 		Examples
 		--------
-		>>> Trading(sandbox=True)  #doctest: +ELLIPSIS
+		>>> trading = Trading(sandbox=True)
+		>>> trading  #doctest: +ELLIPSIS
 		<app.api.Trading object at 0x...>
+		>>> trading.api.config.values['siteid']
+		0
+		>>> trading = Trading(sandbox=True, country='UK')
+		>>> trading.api.config.values['siteid']
+		3
 		"""
 		super(Trading, self).__init__(**kwargs)
-		new = {'site_id': self.global_ids[self.kwargs['country']]['trading']}
-		self.kwargs.update(new)
 
-		# for travis.ci since the value is too large for travis encrypt
+		# for travis.ci since the token is too large for travis encrypt
 		env_file = 'envs.yml'
 
 		if self.sandbox:
@@ -148,8 +157,18 @@ class Trading(Ebay):
 			domain = 'api.ebay.com'
 			certid = kwargs.get('certid', getenv('EBAY_LIVE_CERT_ID'))
 			token = kwargs.get('token', getenv('EBAY_LIVE_TOKEN'))
+			token = (token or getenv_from_file('EBAY_LIVE_TOKEN', env_file))
 
-		self.kwargs.update({'domain': domain, 'certid': certid, 'token': token})
+		new = {
+			'siteid': self.global_ids[self.kwargs['country']]['trading'],
+			'domain': domain,
+			'certid': certid,
+			'token': token,
+			'version': 861,
+			'compatibility': 861,
+		}
+
+		self.kwargs.update(new)
 		self.api = trading(**self.kwargs)
 
 	def get_item(self, id):
@@ -179,8 +198,12 @@ class Trading(Ebay):
 		--------
 		>>> trading = Trading(sandbox=True)
 		>>> categories = trading.get_categories().CategoryArray.Category
-		>>> categories[0]['CategoryName']['value']
-		'Antiques'
+		>>> categories[3]['CategoryName']['value']
+		'Books'
+		>>> trading = Trading(sandbox=True, country='UK')
+		>>> categories = trading.get_categories().CategoryArray.Category
+		>>> categories[3]['CategoryName']['value']
+		'Books, Comics & Magazines'
 		"""
 		data = {'DetailLevel': 'ReturnAll', 'LevelLimit': 1}
 		return self.execute('GetCategories', data)
@@ -238,7 +261,8 @@ class Trading(Ebay):
 		>>> trading = Trading(sandbox=True)
 		>>> response = trading.get_categories()
 		>>> trading.parse(response.CategoryArray.Category)[0]
-		{'category': 'Antiques', 'parent_id': '20081', 'id': '20081', 'level': '1'}
+		{'category': 'Antiques', 'parent_id': '20081', 'country': 'US', 'id': \
+'20081', 'level': '1'}
 		"""
 		items = []
 
@@ -251,6 +275,7 @@ class Trading(Ebay):
 				'category': r.CategoryName,
 				'level': r.CategoryLevel,
 				'parent_id': r.CategoryParentID,
+				'country': self.kwargs['country'],
 			}
 
 			items.append(item)
@@ -310,8 +335,15 @@ class Finding(Ebay):
 		"""
 		super(Finding, self).__init__(**kwargs)
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
-		site_id = self.global_ids[self.kwargs['country']]['finding']
-		self.kwargs.update({'domain': domain, 'siteid': site_id})
+
+		new = {
+			'siteid': self.global_ids[self.kwargs['country']]['finding'],
+			'domain': domain,
+			'version': '1.0.0',
+			'compatibility': '1.0.0',
+		}
+
+		self.kwargs.update(new)
 		self.api = finding(**self.kwargs)
 
 	def search(self, options):
@@ -476,6 +508,7 @@ class Finding(Ebay):
 				'end_date_time': end_date_time,
 				'end_date': end_date,
 				'end_time': end_time,
+				'country': self.kwargs['country'],
 				'currency': currency,
 			}
 
