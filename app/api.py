@@ -145,7 +145,7 @@ class Trading(Ebay):
 		"""
 		super(Trading, self).__init__(**kwargs)
 
-		# for travis.ci since the value is too large for travis encrypt
+		# for travis.ci since the token is too large for travis encrypt
 		env_file = 'envs.yml'
 
 		if self.sandbox:
@@ -157,6 +157,7 @@ class Trading(Ebay):
 			domain = 'api.ebay.com'
 			certid = kwargs.get('certid', getenv('EBAY_LIVE_CERT_ID'))
 			token = kwargs.get('token', getenv('EBAY_LIVE_TOKEN'))
+			token = (token or getenv_from_file('EBAY_LIVE_TOKEN', env_file))
 
 		new = {
 			'siteid': self.global_ids[self.kwargs['country']]['trading'],
