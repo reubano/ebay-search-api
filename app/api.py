@@ -261,7 +261,8 @@ class Trading(Ebay):
 		>>> trading = Trading(sandbox=True)
 		>>> response = trading.get_categories()
 		>>> trading.parse(response.CategoryArray.Category)[0]
-		{'category': 'Antiques', 'parent_id': '20081', 'id': '20081', 'level': '1'}
+		{'category': 'Antiques', 'parent_id': '20081', 'country': 'US', 'id': \
+'20081', 'level': '1'}
 		"""
 		items = []
 
