@@ -133,8 +133,6 @@ class Trading(Ebay):
 		<app.api.Trading object at 0x...>
 		"""
 		super(Trading, self).__init__(**kwargs)
-		new = {'site_id': self.global_ids[self.kwargs['country']]['trading']}
-		self.kwargs.update(new)
 
 		# for travis.ci since the value is too large for travis encrypt
 		env_file = 'envs.yml'
@@ -149,7 +147,16 @@ class Trading(Ebay):
 			certid = kwargs.get('certid', getenv('EBAY_LIVE_CERT_ID'))
 			token = kwargs.get('token', getenv('EBAY_LIVE_TOKEN'))
 
-		self.kwargs.update({'domain': domain, 'certid': certid, 'token': token})
+		new = {
+			'siteid': self.global_ids[self.kwargs['country']]['trading'],
+			'domain': domain,
+			'certid': certid,
+			'token': token,
+			'version': 861,
+			'compatibility': 861,
+		}
+
+		self.kwargs.update(new)
 		self.api = trading(**self.kwargs)
 
 	def get_item(self, id):
@@ -310,8 +317,15 @@ class Finding(Ebay):
 		"""
 		super(Finding, self).__init__(**kwargs)
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
-		site_id = self.global_ids[self.kwargs['country']]['finding']
-		self.kwargs.update({'domain': domain, 'siteid': site_id})
+
+		new = {
+			'siteid': self.global_ids[self.kwargs['country']]['finding'],
+			'domain': domain,
+			'version': '1.0.0',
+			'compatibility': '1.0.0',
+		}
+
+		self.kwargs.update(new)
 		self.api = finding(**self.kwargs)
 
 	def search(self, options):
