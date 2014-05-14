@@ -14,23 +14,29 @@ before_script:
 
 script: python manage.py test
 after_success:
-- if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
-- if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then exit 0; fi
-- wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
-- REPO_NAME=`basename $TRAVIS_REPO_SLUG`
-- if [[ "$TRAVIS_BRANCH" == "master" ]]; then git remote add production git@heroku.com:${REPO_NAME}.git;
-  fi
-- if [[ "$TRAVIS_BRANCH" == "features" ]]; then git remote add staging git@heroku.com:${REPO_NAME}-stage.git;
-  fi
-- echo "Host heroku.com" >> ~/.ssh/config
-- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
-- echo "   CheckHostIP no" >> ~/.ssh/config
-- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-- heroku keys:clear
-- yes | heroku keys:add
-- if [[ "$TRAVIS_BRANCH" == "master" ]]; then yes | git push production master; fi
-- if [[ "$TRAVIS_BRANCH" == "features" ]]; then yes | git push staging features:master;
-  fi
+  # check for pull request and correct python version
+  - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then exit 0; fi
+
+  # Install heroku toolbelt
+  - wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
+
+  # check branch to conditionally add remote repo
+  - REPO_NAME=`basename $TRAVIS_REPO_SLUG`
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then git remote add production git@heroku.com:${REPO_NAME}.git; fi
+  - if [[ "$TRAVIS_BRANCH" == "features" ]]; then git remote add staging git@heroku.com:${REPO_NAME}-stage.git; fi
+
+  # Turn off warnings about SSH keys:
+  - echo "Host heroku.com" >> ~/.ssh/config
+  - echo "   StrictHostKeyChecking no" >> ~/.ssh/config
+  - echo "   CheckHostIP no" >> ~/.ssh/config
+  - echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+  - heroku keys:clear
+  - yes | heroku keys:add
+
+  # check branch for conditional push
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then yes | git push production master; fi
+  - if [[ "$TRAVIS_BRANCH" == "features" ]]; then yes | git push staging features:master; fi
 
 env:
   global:
