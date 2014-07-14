@@ -264,23 +264,17 @@ class Trading(Ebay):
 		{'category': 'Antiques', 'parent_id': '20081', 'country': 'US', 'id': \
 '20081', 'level': '1'}
 		"""
-		items = []
-
 		if response and hasattr(response, 'update'):  # one result
 			response = [response]
 
-		for r in response:
-			item = {
+		return [
+			{
 				'id': r.CategoryID,
 				'category': r.CategoryName,
 				'level': r.CategoryLevel,
 				'parent_id': r.CategoryParentID,
 				'country': self.kwargs['country'],
-			}
-
-			items.append(item)
-
-		return items
+			} for r in response]
 
 	def make_lookup(self, results):
 		"""
