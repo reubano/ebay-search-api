@@ -510,6 +510,7 @@ class Finding(Ebay):
 
 		return {'results': {r['id']: r for r in items}, 'pages': pages}
 
+
 class Shopping(Ebay):
 	"""An eBay Shopping API object"""
 
@@ -586,7 +587,7 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(sandbox=True)
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID',: '' \
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '', \
 'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
 		>>> response = shopping.search(opts)
 		>>> response.keys()
@@ -611,7 +612,7 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(country='US')
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID',: '' \
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '', \
 'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
 		>>> response = shopping.search(opts)
 		>>> parsed = shopping.parse(response)
