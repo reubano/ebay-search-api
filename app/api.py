@@ -593,7 +593,6 @@ class Shopping(Ebay):
 		>>> response.keys()
 		"""
 		verb = options.pop('verb', 'GetShippingCosts')
-		response = api.execute('FindPopularItems', {'QueryKeywords': 'Python'})
 		return self.execute(verb, options)
 
 	def parse(self, response):
