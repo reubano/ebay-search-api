@@ -612,24 +612,17 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(country='US')
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '', \
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '390726953902', \
 'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
 		>>> response = shopping.search(opts)
 		>>> parsed = shopping.parse(response)
 		>>> parsed.keys()
-		['results', 'pages']
-		>>> type(parsed['pages'])
-		<type 'str'>
-		>>> items = parsed['results'].items()
-		>>> item = items[0][1]
-		>>> item.keys()[:5]
-		['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
-		>>> url = item['url']
-		>>> split = url.split('/')[2].split('.')
-		>>> '.'.join(split[-2:])
-		'co.uk'
-		>>> split[0]
-		'www'
+		['results']
+		>>> parsed['results'].keys()
+		['actual_shipping', 'actual_shipping_currency']
 		"""
-		result = response.searchResult.item
-		return {'results': result}
+		result = response['ShippingCostSummary']['ShippingServiceCost']
+		return {
+			'results': {
+				'actual_shipping': result['value'],
+				'actual_shipping_currency': result['currencyID']['value']}}
