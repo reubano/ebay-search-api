@@ -580,7 +580,6 @@ class Shopping(Ebay):
 			ItemID : string
 			* : *
 
-
 		Returns
 		-------
 		eBay Shopping API search results : dict
@@ -588,10 +587,11 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(sandbox=True)
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '', \
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110042474121', \
 'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
 		>>> response = shopping.search(opts)
-		>>> response.keys()
+		>>> response.keys()[:6]
+		['Errors', 'Ack', 'Timestamp', 'value', 'Version', 'Build']
 		"""
 		verb = options.pop('verb', 'GetShippingCosts')
 		return self.execute(verb, options)
