@@ -598,7 +598,7 @@ class Shopping(Ebay):
 
 	def parse(self, response):
 		"""
-		Convert Finding search response into a more readable format.
+		Convert Shopping search response into a more readable format.
 
 		Parameters
 		----------
