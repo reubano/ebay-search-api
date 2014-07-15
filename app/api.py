@@ -533,20 +533,21 @@ class Shopping(Ebay):
 		>>> shopping  #doctest: +ELLIPSIS
 		<app.api.Shopping object at 0x...>
 		>>> shopping.kwargs['domain']
-		'svcs.sandbox.ebay.com'
+		'open.api.sandbox.ebay.com'
 		>>> shopping = Shopping(sandbox=False)
 		>>> shopping.kwargs['domain']
-		'svcs.ebay.com'
+		'open.api.ebay.com'
 		"""
 
 		super(Shopping, self).__init__(**kwargs)
-		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
+		domain = 'open.api.sandbox.ebay.com' if self.sandbox else 'open.api.ebay.com'
 
 		new = {
-			'siteid': self.global_ids[self.kwargs['country']]['countryabbr'],
+			'siteid': self.global_ids[self.kwargs['country']]['countryid'],
 			'domain': domain,
-			'version': '1.0.0',
-			'compatibility': '1.0.0',
+			'uri': '/shopping',
+			'version': '873',
+			'compatibility': '873',
 		}
 
 		self.kwargs.update(new)
