@@ -618,11 +618,15 @@ class Shopping(Ebay):
 		>>> parsed = shopping.parse(response)
 		>>> parsed.keys()
 		['results']
-		>>> parsed['results'].keys()
-		['actual_shipping', 'actual_shipping_currency']
+		>>> parsed['results'].keys()[:2]
+		['actual_shipping', 'actual_shipping_service']
 		"""
-		result = response['ShippingCostSummary']['ShippingServiceCost']
+		cost = response['ShippingCostSummary']['ShippingServiceCost']
+		details = response['ShippingCostSummary']
 		return {
 			'results': {
-				'actual_shipping': result['value'],
-				'actual_shipping_currency': result['currencyID']['value']}}
+				'actual_shipping': cost['value'],
+				'actual_shipping_currency': cost['currencyID']['value'],
+				'actual_shipping_service': details['ShippingServiceName']['value'],
+				'actual_shipping_type': details['ShippingType']['value'],
+				}}
