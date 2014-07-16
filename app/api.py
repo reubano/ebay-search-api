@@ -622,11 +622,11 @@ class Shopping(Ebay):
 		['actual_shipping', 'actual_shipping_service']
 		"""
 		cost = response['ShippingCostSummary']['ShippingServiceCost']
-		details = response['ShippingCostSummary']
+		deets = response['ShippingCostSummary']
 		return {
 			'results': {
 				'actual_shipping': cost['value'],
 				'actual_shipping_currency': cost['currencyID']['value'],
-				'actual_shipping_service': details['ShippingServiceName']['value'],
-				'actual_shipping_type': details['ShippingType']['value'],
 				}}
+				'actual_shipping_service': deets['ShippingServiceName']['value'],
+				'actual_shipping_type': deets['ShippingType']['value'],
