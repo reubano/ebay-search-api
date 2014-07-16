@@ -2,6 +2,13 @@
 
 """ Interface to Amazon API """
 from future.builtins import str, object, zip
+# from __future__ import (
+# 	absolute_import, division, print_function, unicode_literals)
+# from future import standard_library, utils
+# from future.builtins import (
+# 	ascii, bytes, chr, dict, filter, hex, input, int, map, next, oct, open, pow,
+# 	range, round, str, super, zip)
+# standard_library.install_hooks()
 
 import dateutil.parser as du
 import yaml
@@ -160,6 +167,7 @@ class Trading(Ebay):
 			token = kwargs.get('token', getenv('EBAY_LIVE_TOKEN'))
 			token = (token or getenv_from_file('EBAY_LIVE_TOKEN', env_file))
 
+		# TODO: add KeyError exception handling
 		new = {
 			'siteid': self.global_ids[self.kwargs['country']]['countryid'],
 			'domain': domain,

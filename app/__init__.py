@@ -135,6 +135,7 @@ def create_app(config_mode=None, config_file=None):
 		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
 		shopping = Shopping(**kwargs)
 		options = {'ItemID': id, 'MessageID': id, 'DestinationCountryCode': 'US'}
+		# see http://www.airlinecodes.co.uk/country.asp for valid codes
 		options.update(kwargs)
 
 		try:
