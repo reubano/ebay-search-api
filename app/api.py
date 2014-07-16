@@ -596,11 +596,17 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(sandbox=True)
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110039953580', \
-'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
+		>>> id = '110039953580'
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': id, \
+'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1, \
+'MessageID': id}
 		>>> response = shopping.search(opts)
 		>>> response.keys()[:6]
 		['Errors', 'Ack', 'Timestamp', 'value', 'Version', 'Build']
+		>>> 'CorrelationID' in response.keys()
+		True
+		>>> 'ShippingCostSummary' in response.keys()
+		True
 		"""
 		verb = options.pop('verb', 'GetShippingCosts')
 		return self.execute(verb, options)
@@ -621,14 +627,16 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(country='US')
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '390726953902', \
-'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
+		>>> id = '111372333351'
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': id, \
+'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1, \
+'MessageID': id}
 		>>> response = shopping.search(opts)
 		>>> parsed = shopping.parse(response)
 		>>> parsed.keys()
 		['results']
 		>>> parsed['results'].keys()[:2]
-		['actual_shipping', 'actual_shipping_service']
+		['item_id', 'actual_shipping']
 		"""
 		item_id = response['CorrelationID']['value']
 		deets = response['ShippingCostSummary']
