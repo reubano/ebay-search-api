@@ -640,7 +640,7 @@ class Shopping(Ebay):
 			cost = deets['ShippingServiceCost']
 			values = [
 				item_id,
-				cost['value'],
+				float(cost['value'] or 0),
 				cost['currencyID']['value'],
 				deets['ShippingServiceName']['value'],
 				deets['ShippingType']['value'],
