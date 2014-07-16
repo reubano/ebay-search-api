@@ -5,13 +5,17 @@
 
 	Provides the flask application
 """
+from __future__ import absolute_import
+from future.builtins import str
+from future import standard_library
+standard_library.install_hooks()
 import config
 
 from ast import literal_eval
 from os import getenv
 from json import JSONEncoder, dumps, loads
-from urllib import unquote
-from api import Trading, Finding, Shopping
+from urllib.parse import unquote
+from .api import Trading, Finding, Shopping
 from ebaysdk.exception import ConnectionError
 from flask import Flask, redirect, url_for, request, make_response
 from flask.ext.cache import Cache
@@ -25,7 +29,7 @@ encoding = 'utf8'
 
 
 def jsonify(status=200, indent=2, sort_keys=True, **kwargs):
-	options = {'indent': indent, 'sort_keys': sort_keys}
+	options = {'indent': indent, 'sort_keys': sort_keys, 'ensure_ascii': False}
 	response = make_response(dumps(kwargs, cls=CustomEncoder, **options))
 	response.headers['Content-Type'] = 'application/json; charset=utf-8'
 	response.headers['mimetype'] = 'application/json'
@@ -101,8 +105,7 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/search/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def search():
-		kwargs = request.args.to_dict()
-		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
+		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
 		finding = Finding(**kwargs)
 
 		options = {
@@ -126,8 +129,7 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/ship/<id>/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=ship_cache_timeout, key_prefix=make_cache_key)
 	def ship(id):
-		kwargs = request.args.to_dict()
-		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
+		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
 		shopping = Shopping(**kwargs)
 		options = {'ItemID': id, 'DestinationCountryCode': 'US'}
 		options.update(kwargs)
@@ -146,8 +148,7 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/category/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=category_cache_timeout, key_prefix=make_cache_key)
 	def category():
-		kwargs = request.args.to_dict()
-		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
+		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
 		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
@@ -157,8 +158,7 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=sub_category_cache_timeout, key_prefix=make_cache_key)
 	def sub_category(name):
-		kwargs = request.args.to_dict()
-		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
+		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
 		trading = Trading(**kwargs)
 		cat_array = trading.get_categories().CategoryArray
 		response = cat_array.Category
@@ -183,8 +183,7 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/item/<id>/' % app.config['API_URL_PREFIX'])
 	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
 	def item(id):
-		kwargs = request.args.to_dict()
-		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
+		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
 
 		try:
 			trading = Trading(**kwargs)
