@@ -5,13 +5,14 @@
 
 	Provides the flask application
 """
+from __future__ import absolute_import
 import config
 
 from ast import literal_eval
 from os import getenv
 from json import JSONEncoder, dumps, loads
 from urllib import unquote
-from api import Trading, Finding, Shopping
+from .api import Trading, Finding, Shopping
 from ebaysdk.exception import ConnectionError
 from flask import Flask, redirect, url_for, request, make_response
 from flask.ext.cache import Cache
