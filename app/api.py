@@ -627,6 +627,6 @@ class Shopping(Ebay):
 			'results': {
 				'actual_shipping': cost['value'],
 				'actual_shipping_currency': cost['currencyID']['value'],
-				}}
 				'actual_shipping_service': deets['ShippingServiceName']['value'],
 				'actual_shipping_type': deets['ShippingType']['value'],
+			}}
