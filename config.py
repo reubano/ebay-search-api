@@ -1,3 +1,4 @@
+from future.builtins import object
 from os import getenv
 from slugify import slugify
 
