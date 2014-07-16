@@ -134,8 +134,7 @@ def create_app(config_mode=None, config_file=None):
 	def ship(id):
 		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
 		shopping = Shopping(**kwargs)
-		options = {
-			'ItemID': id, 'MessageID': id, 'DestinationCountryCode': 'US'}
+		options = {'ItemID': id, 'MessageID': id, 'DestinationCountryCode': 'US'}
 		options.update(kwargs)
 
 		try:
