@@ -6,7 +6,7 @@ from future.builtins import str, object, zip
 import dateutil.parser as du
 import yaml
 
-from itertools import repeat
+from itertools import repeat, chain
 from os import getenv, path as p
 from ebaysdk import finding, trading, shopping
 
@@ -622,18 +622,22 @@ class Shopping(Ebay):
 		>>> parsed['results'].keys()[:2]
 		['actual_shipping', 'actual_shipping_service']
 		"""
+		item_id = response['CorrelationID']['value']
 		deets = response['ShippingCostSummary']
 		keys = [
-			'actual_shipping', 'actual_shipping_currency',
+			'item_id', 'actual_shipping', 'actual_shipping_currency',
 			'actual_shipping_service', 'actual_shipping_type']
 
 		if deets:
 			cost = deets['ShippingServiceCost']
 			values = [
-				cost['value'], cost['currencyID']['value'],
+				item_id,
+				cost['value'],
+				cost['currencyID']['value'],
 				deets['ShippingServiceName']['value'],
-				deets['ShippingType']['value']]
+				deets['ShippingType']['value'],
+			]
 		else:
-			values = repeat(False, len(keys))
+			values = chain([item_id], repeat(False, len(keys)))
 
 		return {'results': dict(zip(keys, values))}
