@@ -29,7 +29,7 @@ encoding = 'utf8'
 
 
 def jsonify(status=200, indent=2, sort_keys=True, **kwargs):
-	options = {'indent': indent, 'sort_keys': sort_keys}
+	options = {'indent': indent, 'sort_keys': sort_keys, 'ensure_ascii': False}
 	response = make_response(dumps(kwargs, cls=CustomEncoder, **options))
 	response.headers['Content-Type'] = 'application/json; charset=utf-8'
 	response.headers['mimetype'] = 'application/json'
