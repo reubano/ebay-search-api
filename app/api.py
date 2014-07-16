@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """ Interface to Amazon API """
-from future.builtins import str
-from future.builtins import object
-
+from future.builtins import str, object
 
 import dateutil.parser as du
 import yaml
