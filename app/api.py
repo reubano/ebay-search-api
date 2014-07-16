@@ -634,6 +634,6 @@ class Shopping(Ebay):
 				deets['ShippingServiceName']['value'],
 				deets['ShippingType']['value']]
 		else:
-			values = repeat('N/A', len(keys))
+			values = repeat(False, len(keys))
 
 		return {'results': dict(zip(keys, values))}
