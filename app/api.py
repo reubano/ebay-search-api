@@ -7,7 +7,7 @@ import dateutil.parser as du
 import yaml
 
 from os import getenv, path as p
-from ebaysdk import finding, trading
+from ebaysdk import finding, trading, shopping
 
 
 def getenv_from_file(env, yml_file):
@@ -509,3 +509,124 @@ class Finding(Ebay):
 			items.append(item)
 
 		return {'results': {r['id']: r for r in items}, 'pages': pages}
+
+
+class Shopping(Ebay):
+	"""An eBay Shopping API object"""
+
+	def __init__(self, **kwargs):
+		"""
+		Initialization method.
+
+		Parameters
+		----------
+		sandbox : boolean
+		see Ebay class
+
+		Returns
+		-------
+		New instance of :class:`Shopping` : Shopping
+
+		Examples
+		--------
+		>>> shopping = Shopping(sandbox=True)
+		>>> shopping  #doctest: +ELLIPSIS
+		<app.api.Shopping object at 0x...>
+		>>> shopping.kwargs['domain']
+		'open.api.sandbox.ebay.com'
+		>>> shopping = Shopping(sandbox=False)
+		>>> shopping.kwargs['domain']
+		'open.api.ebay.com'
+		"""
+
+		super(Shopping, self).__init__(**kwargs)
+		domain = 'open.api.sandbox.ebay.com' if self.sandbox else 'open.api.ebay.com'
+
+		new = {
+			'siteid': self.global_ids[self.kwargs['country']]['countryid'],
+			'domain': domain,
+			'uri': '/shopping',
+			'version': '873',
+			'compatibility': '873',
+		}
+
+		self.kwargs.update(new)
+		self.api = shopping(**self.kwargs)
+
+	def search(self, options):
+		"""
+		Search eBay using the Shopping API.
+
+		see http://developer.ebay.com/DevZone/shopping/docs/CallRef/index.html
+		for additional options required for the specific verb.
+
+		Parameters
+		----------
+		options : dict containing the following
+			verb : string
+				one of
+					FindHalfProducts
+					FindPopularItems
+					FindPopularSearches
+					FindProducts
+					FindReviewsAndGuides
+					GetCategoryInfo
+					GeteBayTime
+					GetItemStatus
+					GetMultipleItems
+					GetShippingCosts
+					GetSingleItem
+					GetUserProfile
+			ItemID : string
+			* : *
+
+		Returns
+		-------
+		eBay Shopping API search results : dict
+
+		Examples
+		--------
+		>>> shopping = Shopping(sandbox=True)
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110042474121', \
+'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
+		>>> response = shopping.search(opts)
+		>>> response.keys()[:6]
+		['Errors', 'Ack', 'Timestamp', 'value', 'Version', 'Build']
+		"""
+		verb = options.pop('verb', 'GetShippingCosts')
+		return self.execute(verb, options)
+
+	def parse(self, response):
+		"""
+		Convert Shopping search response into a more readable format.
+
+		Parameters
+		----------
+		response : list
+			a search response
+
+		Returns
+		-------
+		Cleaned up search results : list
+
+		Examples
+		--------
+		>>> shopping = Shopping(country='US')
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '390726953902', \
+'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
+		>>> response = shopping.search(opts)
+		>>> parsed = shopping.parse(response)
+		>>> parsed.keys()
+		['results']
+		>>> parsed['results'].keys()[:2]
+		['actual_shipping', 'actual_shipping_service']
+		"""
+		cost = response['ShippingCostSummary']['ShippingServiceCost']
+		deets = response['ShippingCostSummary']
+		return {
+			'results': {
+				'actual_shipping': cost['value'],
+				'actual_shipping_currency': cost['currencyID']['value'],
+				'actual_shipping_service': deets['ShippingServiceName']['value'],
+				'actual_shipping_type': deets['ShippingType']['value'],
+			}}

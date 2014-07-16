@@ -11,13 +11,14 @@ from ast import literal_eval
 from os import getenv
 from json import JSONEncoder, dumps, loads
 from urllib import unquote
-from api import Trading, Finding
+from api import Trading, Finding, Shopping
 from ebaysdk.exception import ConnectionError
 from flask import Flask, redirect, url_for, request, make_response
 from flask.ext.cache import Cache
 
 cache = Cache()
 search_cache_timeout = 60 * 60  # hours (in seconds)
+ship_cache_timeout = 60 * 60  # hours (in seconds)
 category_cache_timeout = 60 * 60 * 24 * 7  # days (in seconds)
 sub_category_cache_timeout = 60 * 60 * 24 * 1  # days (in seconds)
 encoding = 'utf8'
@@ -58,7 +59,7 @@ def parse(string):
 	else:
 		try:
 			return literal_eval(string)
-		except ValueError:
+		except (ValueError, SyntaxError):
 			return string
 
 
@@ -114,6 +115,26 @@ def create_app(config_mode=None, config_file=None):
 		try:
 			response = finding.search(options)
 			result = finding.parse(response)
+			status = 200
+		except ConnectionError as err:
+			result = err.message
+			status = 500
+
+		return jsonify(status, objects=result)
+
+	@app.route('/api/ship/<id>/')
+	@app.route('%s/ship/<id>/' % app.config['API_URL_PREFIX'])
+	@cache.cached(timeout=ship_cache_timeout, key_prefix=make_cache_key)
+	def ship(id):
+		kwargs = request.args.to_dict()
+		kwargs = {k: parse(v) for k, v in kwargs.iteritems()}
+		shopping = Shopping(**kwargs)
+		options = {'ItemID': id, 'DestinationCountryCode': 'US'}
+		options.update(kwargs)
+
+		try:
+			response = shopping.search(options)
+			result = shopping.parse(response)
 			status = 200
 		except ConnectionError as err:
 			result = err.message
