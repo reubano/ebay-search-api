@@ -61,13 +61,13 @@ class Ebay(object):
 		<app.api.Ebay object at 0x...>
 		"""
 		self.global_ids = {
-			'US': {'finding': 'EBAY-US', 'trading': 0, 'currency': 'USD'},
-			'UK': {'finding': 'EBAY-GB', 'trading': 3, 'currency': 'GBP'},
-			'FR': {'finding': 'EBAY-FR', 'trading': 71, 'currency': 'EUR'},
-			'DE': {'finding': 'EBAY-DE', 'trading': 77, 'currency': 'EUR'},
-			'IT': {'finding': 'EBAY-IT', 'trading': 101, 'currency': 'EUR'},
-			'ES': {'finding': 'EBAY-ES', 'trading': 186, 'currency': 'EUR'},
-			'CA': {'finding': 'EBAY-ENCA', 'trading': 2, 'currency': 'CAD'},
+			'US': {'countryabbr': 'EBAY-US', 'countryid': 0, 'currency': 'USD'},
+			'UK': {'countryabbr': 'EBAY-GB', 'countryid': 3, 'currency': 'GBP'},
+			'FR': {'countryabbr': 'EBAY-FR', 'countryid': 71, 'currency': 'EUR'},
+			'DE': {'countryabbr': 'EBAY-DE', 'countryid': 77, 'currency': 'EUR'},
+			'IT': {'countryabbr': 'EBAY-IT', 'countryid': 101, 'currency': 'EUR'},
+			'ES': {'countryabbr': 'EBAY-ES', 'countryid': 186, 'currency': 'EUR'},
+			'CA': {'countryabbr': 'EBAY-ENCA', 'countryid': 2, 'currency': 'CAD'},
 		}
 
 		self.sandbox = sandbox
@@ -160,7 +160,7 @@ class Trading(Ebay):
 			token = (token or getenv_from_file('EBAY_LIVE_TOKEN', env_file))
 
 		new = {
-			'siteid': self.global_ids[self.kwargs['country']]['trading'],
+			'siteid': self.global_ids[self.kwargs['country']]['countryid'],
 			'domain': domain,
 			'certid': certid,
 			'token': token,
@@ -264,23 +264,17 @@ class Trading(Ebay):
 		{'category': 'Antiques', 'parent_id': '20081', 'country': 'US', 'id': \
 '20081', 'level': '1'}
 		"""
-		items = []
-
 		if response and hasattr(response, 'update'):  # one result
 			response = [response]
 
-		for r in response:
-			item = {
+		return [
+			{
 				'id': r.CategoryID,
 				'category': r.CategoryName,
 				'level': r.CategoryLevel,
 				'parent_id': r.CategoryParentID,
 				'country': self.kwargs['country'],
-			}
-
-			items.append(item)
-
-		return items
+			} for r in response]
 
 	def make_lookup(self, results):
 		"""
@@ -337,7 +331,7 @@ class Finding(Ebay):
 		domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
 
 		new = {
-			'siteid': self.global_ids[self.kwargs['country']]['finding'],
+			'siteid': self.global_ids[self.kwargs['country']]['countryabbr'],
 			'domain': domain,
 			'version': '1.0.0',
 			'compatibility': '1.0.0',
