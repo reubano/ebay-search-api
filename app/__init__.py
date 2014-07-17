@@ -7,14 +7,17 @@
 """
 from __future__ import absolute_import
 from future.builtins import str
-from future import standard_library
-standard_library.install_hooks()
+
+try:
+	from urllib.parse import unquote
+except ImportError:
+	from urllib import unquote
+
 import config
 
 from ast import literal_eval
 from os import getenv
 from json import JSONEncoder, dumps, loads
-from urllib.parse import unquote
 from .api import Trading, Finding, Shopping
 from ebaysdk.exception import ConnectionError
 from flask import Flask, redirect, url_for, request, make_response
