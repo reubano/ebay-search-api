@@ -588,7 +588,7 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(sandbox=True)
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110042474121', \
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110039953580', \
 'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
 		>>> response = shopping.search(opts)
 		>>> response.keys()[:6]
