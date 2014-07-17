@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """ Interface to Amazon API """
-from future.builtins import str
-from future.builtins import object
-
+from future.builtins import str, object, zip
 
 import dateutil.parser as du
 import yaml
 
+from itertools import repeat
 from os import getenv, path as p
 from ebaysdk import finding, trading, shopping
 
@@ -463,7 +462,7 @@ class Finding(Ebay):
 		"""
 		items = []
 		currency = self.global_ids[self.kwargs['country']]['currency']
-		result = response.searchResult.item
+		result = response.searchResult.item or {}
 		pages = response.paginationOutput.totalPages
 
 		if result and hasattr(result, 'update'):  # one result
@@ -589,7 +588,7 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(sandbox=True)
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110042474121', \
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110039953580', \
 'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
 		>>> response = shopping.search(opts)
 		>>> response.keys()[:6]
@@ -623,12 +622,18 @@ class Shopping(Ebay):
 		>>> parsed['results'].keys()[:2]
 		['actual_shipping', 'actual_shipping_service']
 		"""
-		cost = response['ShippingCostSummary']['ShippingServiceCost']
 		deets = response['ShippingCostSummary']
-		return {
-			'results': {
-				'actual_shipping': cost['value'],
-				'actual_shipping_currency': cost['currencyID']['value'],
-				'actual_shipping_service': deets['ShippingServiceName']['value'],
-				'actual_shipping_type': deets['ShippingType']['value'],
-			}}
+		keys = [
+			'actual_shipping', 'actual_shipping_currency',
+			'actual_shipping_service', 'actual_shipping_type']
+
+		if deets:
+			cost = deets['ShippingServiceCost']
+			values = [
+				cost['value'], cost['currencyID']['value'],
+				deets['ShippingServiceName']['value'],
+				deets['ShippingType']['value']]
+		else:
+			values = repeat(False, len(keys))
+
+		return {'results': dict(zip(keys, values))}
