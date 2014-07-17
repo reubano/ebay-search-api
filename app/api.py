@@ -462,7 +462,7 @@ class Finding(Ebay):
 		"""
 		items = []
 		currency = self.global_ids[self.kwargs['country']]['currency']
-		result = response.searchResult.item
+		result = response.searchResult.item or {}
 		pages = response.paginationOutput.totalPages
 
 		if result and hasattr(result, 'update'):  # one result
