@@ -16,7 +16,7 @@ import yaml
 from itertools import repeat, chain
 from os import getenv, path as p
 from ebaysdk import finding, trading, shopping
-
+from ebaysdk.exception import ConnectionError
 
 def getenv_from_file(env, yml_file):
 	parent = p.dirname(p.dirname(__file__))
@@ -609,7 +609,12 @@ class Shopping(Ebay):
 		True
 		"""
 		verb = options.pop('verb', 'GetShippingCosts')
-		return self.execute(verb, options)
+		is_US = options['DestinationCountryCode'] == 'US'
+
+		if is_US and not options.has_key('DestinationPostalCode'):
+			raise ConnectionError({'Error': 'Missing DestinationPostalCode'})
+		else:
+			return self.execute(verb, options)
 
 	def parse(self, response):
 		"""
