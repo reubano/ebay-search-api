@@ -30,6 +30,20 @@ def test():
 	check_call('nosetests -xv', shell=True)
 
 
+@manager.command
+def deploy():
+	"""Deploy staging app"""
+	check_call('heroku keys:add ~/.ssh/id_rsa.pub --remote staging', shell=True)
+	check_call('git push origin features', shell=True)
+
+
+@manager.command
+def deployprod():
+	"""Deploy production app"""
+	check_call('heroku keys:add ~/.ssh/id_rsa.pub --remote production', shell=True)
+	check_call('git push origin master', shell=True)
+
+
 @manager.option('-r', '--requirement', help='Requirement file', default='dev')
 def pipme(requirement):
 	"""Install requirements.txt"""
