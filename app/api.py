@@ -2,13 +2,21 @@
 
 """ Interface to Amazon API """
 from future.builtins import str, object, zip
+# from __future__ import (
+# 	absolute_import, division, print_function, unicode_literals)
+# from future import standard_library, utils
+# from future.builtins import (
+# 	ascii, bytes, chr, dict, filter, hex, input, int, map, next, oct, open, pow,
+# 	range, round, str, super, zip)
+# standard_library.install_hooks()
 
 import dateutil.parser as du
 import yaml
 
-from itertools import repeat
+from itertools import repeat, chain
 from os import getenv, path as p
 from ebaysdk import finding, trading, shopping
+from ebaysdk.exception import ConnectionError
 
 
 def getenv_from_file(env, yml_file):
@@ -160,6 +168,7 @@ class Trading(Ebay):
 			token = kwargs.get('token', getenv('EBAY_LIVE_TOKEN'))
 			token = (token or getenv_from_file('EBAY_LIVE_TOKEN', env_file))
 
+		# TODO: add KeyError exception handling
 		new = {
 			'siteid': self.global_ids[self.kwargs['country']]['countryid'],
 			'domain': domain,
@@ -171,6 +180,17 @@ class Trading(Ebay):
 
 		self.kwargs.update(new)
 		self.api = trading(**self.kwargs)
+
+	def get_usage(self):
+		"""
+		Get eBay api usage details
+
+		Returns
+		-------
+		eBay api usage details : dict
+		"""
+		data = {}
+		return self.execute('GetAPIAccessRules', data)
 
 	def get_item(self, id):
 		"""
@@ -588,14 +608,25 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(sandbox=True)
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '110039953580', \
-'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
+		>>> id = '110039953580'
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': id, \
+'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1, \
+'MessageID': id}
 		>>> response = shopping.search(opts)
 		>>> response.keys()[:6]
 		['Errors', 'Ack', 'Timestamp', 'value', 'Version', 'Build']
+		>>> 'CorrelationID' in response.keys()
+		True
+		>>> 'ShippingCostSummary' in response.keys()
+		True
 		"""
 		verb = options.pop('verb', 'GetShippingCosts')
-		return self.execute(verb, options)
+		is_US = options['DestinationCountryCode'] == 'US'
+
+		if is_US and 'DestinationPostalCode' not in options:
+			raise ConnectionError({'Error': 'Missing DestinationPostalCode'})
+		else:
+			return self.execute(verb, options)
 
 	def parse(self, response):
 		"""
@@ -613,27 +644,33 @@ class Shopping(Ebay):
 		Examples
 		--------
 		>>> shopping = Shopping(country='US')
-		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': '390726953902', \
-'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1}
+		>>> id = '111372333351'
+		>>> opts = {'DestinationCountryCode': 'US', 'ItemID': id, \
+'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1, \
+'MessageID': id}
 		>>> response = shopping.search(opts)
 		>>> parsed = shopping.parse(response)
 		>>> parsed.keys()
 		['results']
 		>>> parsed['results'].keys()[:2]
-		['actual_shipping', 'actual_shipping_service']
+		['item_id', 'actual_shipping']
 		"""
+		item_id = response['CorrelationID']['value']
 		deets = response['ShippingCostSummary']
 		keys = [
-			'actual_shipping', 'actual_shipping_currency',
+			'item_id', 'actual_shipping', 'actual_shipping_currency',
 			'actual_shipping_service', 'actual_shipping_type']
 
 		if deets:
 			cost = deets['ShippingServiceCost']
 			values = [
-				cost['value'], cost['currencyID']['value'],
+				item_id,
+				float(cost['value'] or 0),
+				cost['currencyID']['value'],
 				deets['ShippingServiceName']['value'],
-				deets['ShippingType']['value']]
+				deets['ShippingType']['value'],
+			]
 		else:
-			values = repeat(False, len(keys))
+			values = chain([item_id], repeat(False, len(keys)))
 
 		return {'results': dict(zip(keys, values))}
