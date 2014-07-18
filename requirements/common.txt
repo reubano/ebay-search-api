@@ -9,6 +9,7 @@ Unidecode==0.04.14
 Werkzeug==0.9.4
 beautifulsoup4==4.3.2
 ebaysdk==1.0.2
+future==0.12.3
 gevent==1.0
 greenlet==0.4.2
 grequests==0.2.0
