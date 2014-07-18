@@ -24,8 +24,8 @@ from flask import Flask, redirect, url_for, request, make_response
 from flask.ext.cache import Cache
 
 cache = Cache()
-search_cache_timeout = 60 * 60  # hours (in seconds)
-ship_cache_timeout = 60 * 60  # hours (in seconds)
+search_cache_timeout = 60 * 60 * 1 # hours (in seconds)
+ship_cache_timeout = 60 * 60 * 1 # hours (in seconds)
 category_cache_timeout = 60 * 60 * 24 * 7  # days (in seconds)
 sub_category_cache_timeout = 60 * 60 * 24 * 1  # days (in seconds)
 encoding = 'utf8'
