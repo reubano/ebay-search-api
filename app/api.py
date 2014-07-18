@@ -18,6 +18,7 @@ from os import getenv, path as p
 from ebaysdk import finding, trading, shopping
 from ebaysdk.exception import ConnectionError
 
+
 def getenv_from_file(env, yml_file):
 	parent = p.dirname(p.dirname(__file__))
 	yml_file = p.join(parent, yml_file)
@@ -179,6 +180,17 @@ class Trading(Ebay):
 
 		self.kwargs.update(new)
 		self.api = trading(**self.kwargs)
+
+	def get_usage(self):
+		"""
+		Get eBay api usage details
+
+		Returns
+		-------
+		eBay api usage details : dict
+		"""
+		data = {}
+		return self.execute('GetAPIAccessRules', data)
 
 	def get_item(self, id):
 		"""
@@ -611,7 +623,7 @@ class Shopping(Ebay):
 		verb = options.pop('verb', 'GetShippingCosts')
 		is_US = options['DestinationCountryCode'] == 'US'
 
-		if is_US and not options.has_key('DestinationPostalCode'):
+		if is_US and 'DestinationPostalCode' not in options:
 			raise ConnectionError({'Error': 'Missing DestinationPostalCode'})
 		else:
 			return self.execute(verb, options)

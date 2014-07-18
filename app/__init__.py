@@ -24,8 +24,9 @@ from flask import Flask, redirect, url_for, request, make_response
 from flask.ext.cache import Cache
 
 cache = Cache()
-search_cache_timeout = 60 * 60 * 1 # hours (in seconds)
-ship_cache_timeout = 60 * 60 * 1 # hours (in seconds)
+search_cache_timeout = 60 * 60 * 1  # hours (in seconds)
+ship_cache_timeout = 60 * 60 * 1  # hours (in seconds)
+usage_cache_timeout = 60 * 60 * 1  # hours (in seconds)
 category_cache_timeout = 60 * 60 * 24 * 7  # days (in seconds)
 sub_category_cache_timeout = 60 * 60 * 24 * 1  # days (in seconds)
 encoding = 'utf8'
@@ -103,6 +104,25 @@ def create_app(config_mode=None, config_file=None):
 	@app.route('%s/' % app.config['API_URL_PREFIX'])
 	def api():
 		return 'Welcome to the %s!' % app.config['APP_NAME']
+
+	@app.route('/api/usage/')
+	@app.route('%s/usage/' % app.config['API_URL_PREFIX'])
+	@cache.cached(timeout=usage_cache_timeout, key_prefix=make_cache_key)
+	def usage():
+		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
+		finding = Finding(**kwargs)
+		options = {}
+		options.update(kwargs)
+
+		try:
+			response = finding.search(options)
+			result = finding.parse(response)
+			status = 200
+		except ConnectionError as err:
+			result = err.message
+			status = 500
+
+		return jsonify(status, objects=result)
 
 	@app.route('/api/search/')
 	@app.route('%s/search/' % app.config['API_URL_PREFIX'])
