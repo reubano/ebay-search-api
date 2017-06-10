@@ -1,3 +1,0 @@
-recursive-include app/tests *
-include app/README.rst
-include app/LICENSE

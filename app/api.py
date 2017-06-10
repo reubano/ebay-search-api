@@ -1,28 +1,36 @@
 # -*- coding: utf-8 -*-
 
 """ Interface to Amazon API """
-from future.builtins import str, object, zip
-# from __future__ import (
-#   absolute_import, division, print_function, unicode_literals)
-# from future import standard_library, utils
-# from future.builtins import (
-#   ascii, bytes, chr, dict, filter, hex, input, int, map, next, oct, open, pow,
-#   range, round, str, super, zip)
-# standard_library.install_hooks()
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals)
 
-import dateutil.parser as du
-import yaml
-
-from itertools import repeat, chain
 from os import getenv, path as p
-from ebaysdk import finding, trading, shopping
-from ebaysdk.exception import ConnectionError
+
+import yaml
+import pygogo as gogo
+
+from dateutil.parser import parse as du_parse
+from ebaysdk.finding import Connection as finding
+from ebaysdk.trading import Connection as trading
+from ebaysdk.shopping import Connection as shopping
+
+try:
+    ConnectionError
+except NameError:
+    from ebaysdk.exception import ConnectionError
+    eBayConnectionError = ConnectionError
+else:
+    from ebaysdk.exception import ConnectionError as eBayConnectionError
+
+from builtins import *  # noqa  # pylint: disable=unused-import
+
+logger = gogo.Gogo(__name__, monolog=True).logger
 
 
 def getenv_from_file(env, yml_file):
     parent = p.dirname(p.dirname(__file__))
     yml_file = p.join(parent, yml_file)
-    result = yaml.load(file(yml_file, 'r'))
+    result = yaml.load(open(yml_file, 'r'))
     return result[env]
 
 
@@ -30,33 +38,44 @@ class Andand(object):
     """A Ruby inspired null soaking object"""
 
     def __init__(self, item=None):
-        self.item = item
+        self._item_ = item
+
+    def __len__(self):
+        return len(self._item_)
+
+    def __iter__(self):
+        return iter(self._item_)
+
+    def __getitem__(self, key):
+        try:
+            return self._item_[key]
+        except (KeyError, IndexError):
+            return None
 
     def __getattr__(self, name):
         try:
-            item = getattr(self.item, name)
-            return item if name is 'item' else Andand(item)
+            return Andand(getattr(self._item_, name))
+            # return item if name is 'item' else Andand(item)
         except AttributeError:
-            return Andand()
+            return Andand(self._item_.get(name)) if self._item_ else Andand()
 
-    def __call__(self):
-        return self.item
+    def __call__(self, default=None):
+        return self._item_ or default
 
 
 class Ebay(object):
     """A general Ebay API config object"""
 
     def __init__(self, sandbox=False, **kwargs):
-        """
-        Initialization method.
+        """Initialization method.
 
         Parameters
         ----------
         argument : string
-        app_id : eBay application id
+        appid : eBay application id
         verbose : show debug and warning messages (default: False)
         errors : warnings enabled (default: True)
-        country : eBay country (default: UK)
+        country : eBay country (default: US)
         timeout : HTTP request timeout (default: 20)
         parallel : ebaysdk parallel object
 
@@ -70,13 +89,23 @@ class Ebay(object):
         <app.api.Ebay object at 0x...>
         """
         self.global_ids = {
-            'US': {'countryabbr': 'EBAY-US', 'countryid': 0, 'currency': 'USD'},
-            'UK': {'countryabbr': 'EBAY-GB', 'countryid': 3, 'currency': 'GBP'},
-            'FR': {'countryabbr': 'EBAY-FR', 'countryid': 71, 'currency': 'EUR'},
-            'DE': {'countryabbr': 'EBAY-DE', 'countryid': 77, 'currency': 'EUR'},
-            'IT': {'countryabbr': 'EBAY-IT', 'countryid': 101, 'currency': 'EUR'},
-            'ES': {'countryabbr': 'EBAY-ES', 'countryid': 186, 'currency': 'EUR'},
-            'CA': {'countryabbr': 'EBAY-ENCA', 'countryid': 2, 'currency': 'CAD'},
+            'US': {
+                'countryabbr': 'EBAY-US', 'countryid': '0', 'currency': 'USD'},
+            'UK': {
+                'countryabbr': 'EBAY-GB', 'countryid': '3', 'currency': 'GBP'},
+            'FR': {
+                'countryabbr': 'EBAY-FR', 'countryid': '71', 'currency': 'EUR'},
+            'DE': {
+                'countryabbr': 'EBAY-DE', 'countryid': '77', 'currency': 'EUR'},
+            'IT': {
+                'countryabbr': 'EBAY-IT', 'countryid': '101',
+                'currency': 'EUR'},
+            'ES': {
+                'countryabbr': 'EBAY-ES', 'countryid': '186',
+                'currency': 'EUR'},
+            'CA': {
+                'countryabbr': 'EBAY-ENCA', 'countryid': '2',
+                'currency': 'CAD'},
         }
 
         self.sandbox = sandbox
@@ -97,9 +126,8 @@ class Ebay(object):
             'timeout': kwargs.get('timeout', 20),
         }
 
-    def execute(self, verb, data):
-        """
-        Execute the eBay API request.
+    def execute(self, verb, data=None):
+        """Execute the eBay API request.
 
         Parameters
         ----------
@@ -112,25 +140,48 @@ class Ebay(object):
 
         Examples
         --------
-        >>> Finding(sandbox=True).execute('findItemsAdvanced', \
-{'keywords': 'sushi'}).keys()
-        ['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
-'searchResult', 'version']
+        >>> finding = Finding(sandbox=True)
+        >>> data = {'keywords': 'sushi'}
+        >>> response = finding.execute('findItemsAdvanced', data)
+        >>> set(response) == {
+        ...     'itemSearchURL', 'paginationOutput', 'ack', 'timestamp',
+        ...     'searchResult', 'version'}
+        True
         """
-        self.api.execute(verb, data)
+        data = data or {}
 
-        if self.api.error():
-            raise self.api.error()
-        else:
-            return self.api.response_dict()
+        try:
+            response = self.api.execute(verb, data)
+        except (ConnectionError, eBayConnectionError) as e:
+            response = e.response
+
+        try:
+            success = response.reply.ack == 'Success'
+        except AttributeError:
+            try:
+                success = response.reply.Ack == 'Success'
+            except AttributeError:
+                success = False
+
+        result = response.dict()
+
+        if not success:
+            try:
+                msg = response.reply.Errors.ShortMessage
+            except AttributeError:
+                msg = response.reply.errorMessage.error.message
+
+            logger.error(msg)
+            result['message'] = msg
+
+        return result
 
 
 class Trading(Ebay):
     """An Ebay Trading API object"""
 
     def __init__(self, **kwargs):
-        """
-        Initialization method.
+        """Initialization method.
 
         Parameters
         ----------
@@ -146,11 +197,11 @@ class Trading(Ebay):
         >>> trading = Trading(sandbox=True)
         >>> trading  #doctest: +ELLIPSIS
         <app.api.Trading object at 0x...>
-        >>> trading.api.config.values['siteid']
-        0
+        >>> trading.api.config.values['siteid'] == '0'
+        True
         >>> trading = Trading(sandbox=True, country='UK')
-        >>> trading.api.config.values['siteid']
-        3
+        >>> trading.api.config.values['siteid'] == '3'
+        True
         """
         super(Trading, self).__init__(**kwargs)
 
@@ -174,42 +225,71 @@ class Trading(Ebay):
             'domain': domain,
             'certid': certid,
             'token': token,
-            'version': 861,
-            'compatibility': 861,
+            'version': '861',
+            'compatibility': '861',
         }
 
         self.kwargs.update(new)
         self.api = trading(**self.kwargs)
 
-    def get_usage(self):
-        """
-        Get eBay api usage details
+    # def get_usage(self):
+    #     """Get eBay API usage details
 
-        Returns
-        -------
-        eBay api usage details : dict
-        """
-        data = {}
-        return self.execute('GetAPIAccessRules', data)
+    #     Returns
+    #     -------
+    #     eBay api usage details : dict
 
-    def get_item(self, id):
-        """
-        Get eBay item details
+    #     Examples
+    #     --------
+    #     >>> trading = Trading()
+    #     >>> response = trading.get_usage()
+    #     >>> response
+    #     """
+    #     return self.execute('GetAPIAccessRules', {})
+
+    def get_item(self, item_id):
+        """Get eBay item details
 
         Parameters
         ----------
-        id : ebay id
+        item_id : ebay item id
 
         Returns
         -------
         eBay item details : dict
+
+        Examples
+        --------
+        >>> finding = Finding()
+        >>> response = finding.search({'keywords': 'lego'})
+        >>> parsed = finding.parse(response)
+        >>> item = list(parsed['results'].values())[0]
+        >>> trading = Trading()
+        >>> response = trading.get_item(item['id'])
+        >>> fields = {
+        ...     'ProxyItem', 'PostCheckoutExperienceEnabled', 'ListingDetails',
+        ...     'DispatchTimeMax', 'Site', 'PrimaryCategory', 'HitCounter',
+        ...     'GetItFast', 'Quantity', 'IntangibleItem', 'ReturnPolicy',
+        ...     'HideFromSearch', 'BuyerProtection', 'ItemID', 'Seller',
+        ...     'ConditionID', 'BuyerResponsibleForShipping', 'AutoPay',
+        ...     'Title', 'SellingStatus', 'eBayPlusEligible', 'StartPrice',
+        ...     'PostalCode', 'Location', 'BuyItNowPrice', 'Country',
+        ...     'ShippingDetails', 'LocationDefaulted', 'GiftIcon',
+        ...     'PictureDetails', 'eBayPlus', 'Currency', 'ShipToLocations',
+        ...     'RelistParentID', 'ListingDuration', 'ProductListingDetails',
+        ...     'HitCount', 'BuyerGuaranteePrice', 'TimeLeft', 'Storefront',
+        ...     'PrivateListing', 'ConditionDisplayName', 'ReviseStatus',
+        ...     'ShippingPackageDetails', 'ListingType', 'PaymentMethods',
+        ...     'BuyerRequirementDetails', 'BestOfferDetails',
+        ...     'OutOfStockControl', 'TopRatedListing'}
+        >>> set(response['Item']).difference(fields) == set()
+        True
         """
-        data = {'DetailLevel': 'ItemReturnAttributes', 'ItemID': id}
+        data = {'DetailLevel': 'ItemReturnAttributes', 'ItemID': item_id}
         return self.execute('GetItem', data)
 
     def get_categories(self):
-        """
-        Get eBay top level categories.
+        """Get eBay top level categories.
 
         Returns
         -------
@@ -218,20 +298,20 @@ class Trading(Ebay):
         Examples
         --------
         >>> trading = Trading(sandbox=True)
-        >>> categories = trading.get_categories().CategoryArray.Category
-        >>> categories[3]['CategoryName']['value']
+        >>> response = trading.get_categories()
+        >>> response.CategoryArray.Category[3]['CategoryName']
         'Books'
         >>> trading = Trading(sandbox=True, country='UK')
-        >>> categories = trading.get_categories().CategoryArray.Category
-        >>> categories[3]['CategoryName']['value']
+        >>> response = trading.get_categories()
+        >>> response.CategoryArray.Category[3]['CategoryName']
         'Books, Comics & Magazines'
         """
         data = {'DetailLevel': 'ReturnAll', 'LevelLimit': 1}
-        return self.execute('GetCategories', data)
+        response = self.execute('GetCategories', data)
+        return Andand(response)
 
     def get_hierarchy(self, category_id, **kwargs):
-        """
-        Get the hierarchy for a top level category.
+        """Get the hierarchy for a top level category.
 
         Parameters
         ----------
@@ -251,10 +331,10 @@ class Trading(Ebay):
         Examples
         --------
         >>> trading = Trading(sandbox=True)
-        >>> categories = trading.get_categories().CategoryArray.Category
-        >>> id = categories[0]['CategoryID']['value']
-        >>> response = trading.get_hierarchy(id, level_limit=2)
-        >>> response.CategoryArray.Category[1]['CategoryName']['value']
+        >>> response = trading.get_categories()
+        >>> cid = response.CategoryArray.Category[0]['CategoryID']
+        >>> response = trading.get_hierarchy(cid, level_limit=2)
+        >>> response.CategoryArray.Category[1]['CategoryName']
         'Antiquities'
         """
         data = {
@@ -262,11 +342,12 @@ class Trading(Ebay):
             'DetailLevel': kwargs.get('detail_level', 'ReturnAll'),
             # 'LevelLimit': kwargs.get('level_limit', 0),
         }
-        return self.execute('GetCategories', data)
+
+        response = self.execute('GetCategories', data)
+        return Andand(response)
 
     def parse(self, response):
-        """
-        Convert Trading API search response into a more readable format.
+        """Convert Trading API search response into a more readable format.
 
         Parameters
         ----------
@@ -281,25 +362,25 @@ class Trading(Ebay):
         --------
         >>> trading = Trading(sandbox=True)
         >>> response = trading.get_categories()
-        >>> trading.parse(response.CategoryArray.Category)[0]
-        {'category': 'Antiques', 'parent_id': '20081', 'country': 'US', 'id': \
-'20081', 'level': '1'}
+        >>> trading.parse(response.CategoryArray.Category)[0] == {
+        ...     'category': 'Antiques', 'parent_id': '20081', 'country': 'US',
+        ...     'id': '20081', 'level': '1'}
+        True
         """
         if response and hasattr(response, 'update'):  # one result
             response = [response]
 
         return [
             {
-                'id': r.CategoryID,
-                'category': r.CategoryName,
-                'level': r.CategoryLevel,
-                'parent_id': r.CategoryParentID,
+                'id': r['CategoryID'],
+                'category': r['CategoryName'],
+                'level': r['CategoryLevel'],
+                'parent_id': r['CategoryParentID'],
                 'country': self.kwargs['country'],
             } for r in response]
 
     def make_lookup(self, results):
-        """
-        Convert Trading API category list into a lookup table.
+        """Convert Trading API category list into a lookup table.
 
         Parameters
         ----------
@@ -315,8 +396,21 @@ class Trading(Ebay):
         >>> trading = Trading(sandbox=True)
         >>> response = trading.get_categories()
         >>> results = trading.parse(response.CategoryArray.Category)
-        >>> trading.make_lookup(results).keys()[:3]
-        ['everything else', 'business & industrial', 'pet supplies']
+        >>> set(trading.make_lookup(results)) == {
+        ...     'toys & hobbies', 'health & beauty', 'music',
+        ...     'musical instruments & gear', 'clothing, shoes & accessories',
+        ...     'real estate', 'art', 'antiques', 'home & garden',
+        ...     'dolls & bears', 'computers/tablets & networking',
+        ...     'business & industrial', 'video games & consoles',
+        ...     'consumer electronics', 'tickets & experiences',
+        ...     'sports mem, cards & fan shop', 'jewelry & watches',
+        ...     'gift cards & coupons', 'entertainment memorabilia',
+        ...     'specialty services', 'stamps', 'cameras & photo',
+        ...     'pottery & glass', 'coins & paper money', 'everything else',
+        ...     'dvds & movies', 'crafts', 'travel', 'pet supplies', 'baby',
+        ...     'collectibles', 'books', 'sporting goods',
+        ...     'cell phones & accessories'}
+        True
         """
         return {r['category'].lower(): r for r in results}
 
@@ -325,8 +419,7 @@ class Finding(Ebay):
     """An eBay Finding API object"""
 
     def __init__(self, **kwargs):
-        """
-        Initialization method.
+        """Initialization method.
 
         Parameters
         ----------
@@ -342,11 +435,11 @@ class Finding(Ebay):
         >>> finding = Finding(sandbox=True)
         >>> finding  #doctest: +ELLIPSIS
         <app.api.Finding object at 0x...>
-        >>> finding.kwargs['domain']
-        'svcs.sandbox.ebay.com'
+        >>> finding.kwargs['domain'] == 'svcs.sandbox.ebay.com'
+        True
         >>> finding = Finding(sandbox=False)
-        >>> finding.kwargs['domain']
-        'svcs.ebay.com'
+        >>> finding.kwargs['domain'] == 'svcs.ebay.com'
+        True
         """
         super(Finding, self).__init__(**kwargs)
         domain = 'svcs.sandbox.ebay.com' if self.sandbox else 'svcs.ebay.com'
@@ -362,8 +455,7 @@ class Finding(Ebay):
         self.api = finding(**self.kwargs)
 
     def search(self, options):
-        """
-        Search eBay using the Finding API.
+        """Search eBay using the Finding API.
 
         You must specify keywords and/or a category_id. The exception to this
         rule is when the Seller item filter is used. The Seller item filter can
@@ -434,21 +526,22 @@ class Finding(Ebay):
         >>> finding = Finding(sandbox=True)
         >>> opts = {'keywords': 'Harry Potter'}
         >>> response = finding.search(opts)
-        >>> response.keys()
-        ['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
-'searchResult', 'version']
+        >>> set(response) == {
+        ...     'itemSearchURL', 'paginationOutput', 'ack', 'timestamp',
+        ...     'searchResult', 'version'}
+        True
         >>> finding = Finding(country='UK')
         >>> response = finding.search(opts)
-        >>> response.keys()
-        ['itemSearchURL', 'paginationOutput', 'ack', 'timestamp', \
-'searchResult', 'version']
+        >>> set(response) == {
+        ...     'itemSearchURL', 'paginationOutput', 'ack', 'timestamp',
+        ...     'searchResult', 'version'}
+        True
         """
         verb = options.pop('verb', 'findItemsAdvanced')
         return self.execute(verb, options)
 
     def parse(self, response):
-        """
-        Convert Finding search response into a more readable format.
+        """Convert Finding search response into a more readable format.
 
         Parameters
         ----------
@@ -465,31 +558,28 @@ class Finding(Ebay):
         >>> opts = {'keywords': 'Harry Potter'}
         >>> response = finding.search(opts)
         >>> parsed = finding.parse(response)
-        >>> parsed.keys()
-        ['results', 'pages']
-        >>> type(parsed['pages'])
-        <type 'str'>
-        >>> items = parsed['results'].items()
-        >>> item = items[0][1]
-        >>> item.keys()[:5]
-        ['price_and_shipping', 'end_date', 'price', 'currency', 'end_date_time']
-        >>> url = item['url']
-        >>> split = url.split('/')[2].split('.')
-        >>> '.'.join(split[-2:])
-        'co.uk'
-        >>> split[0]
-        'www'
+        >>> set(parsed) == {'message', 'results', 'pages'}
+        True
+        >>> item = list(parsed['results'].values())[0]
+        >>> set(item) == {
+        ...     'end_time', 'buy_now_price', 'url', 'currency', 'end_date',
+        ...     'shipping', 'buy_now_price_and_shipping', 'title', 'id',
+        ...     'condition', 'price_and_shipping', 'item_type', 'price',
+        ...     'end_date_time', 'country'}
+        True
+        >>> 'www.ebay.co.uk' in item['url']
+        True
         """
         items = []
         currency = self.global_ids[self.kwargs['country']]['currency']
-        result = response.searchResult.item or {}
-        pages = response.paginationOutput.totalPages
+        result = Andand(response).searchResult.item([])
+        pages = Andand(response).paginationOutput.totalPages(0)
 
         if result and hasattr(result, 'update'):  # one result
             result = [result]
 
         for r in result:
-            date_time = du.parse(r.listingInfo.endTime)
+            date_time = du_parse(r['listingInfo']['endTime'])
             end_date = date_time.strftime("%Y-%m-%d")
             end_time = date_time.strftime("%H:%M")
             offset_years = int(date_time.strftime("%Y")) - 2010
@@ -502,19 +592,23 @@ class Finding(Ebay):
             args = [year_in_sec, days_in_sec, hours_in_sec, minutes_in_sec]
             args.append(secs_in_sec)
             end_date_time = sum(args)
-            price = float(Andand(r).sellingStatus.currentPrice.value() or 0)
-            buy_now_price = float(Andand(r).listingInfo.buyItNowPrice.value() or 0)
-            shipping = float(Andand(r).shippingInfo.shippingServiceCost.value() or 0)
+
+            price = float(Andand(r).sellingStatus.currentPrice.value(0))
+            buy_now_price = float(Andand(r).listingInfo.buyItNowPrice.value(0))
+
+            shipping = float(
+                Andand(r).shippingInfo.shippingServiceCost.value(0))
+
             condition = Andand(r).condition.conditionDisplayName()
             price_and_shipping = price + shipping
             buy_now_price_and_shipping = buy_now_price + shipping
 
             item = {
-                'id': str(r.itemId),
-                'url': r.viewItemURL,
-                'title': r.title,
+                'id': str(r['itemId']),
+                'url': r['viewItemURL'],
+                'title': r['title'],
                 'condition': condition,
-                'item_type': r.listingInfo.listingType,
+                'item_type': r['listingInfo']['listingType'],
                 'price': price,
                 'buy_now_price': buy_now_price,
                 'shipping': shipping,
@@ -529,15 +623,16 @@ class Finding(Ebay):
 
             items.append(item)
 
-        return {'results': {r['id']: r for r in items}, 'pages': pages}
+        results = {r['id']: r for r in items}
+        message = response.get('message')
+        return {'results': results, 'pages': pages, 'message': message}
 
 
 class Shopping(Ebay):
     """An eBay Shopping API object"""
 
     def __init__(self, **kwargs):
-        """
-        Initialization method.
+        """Initialization method.
 
         Parameters
         ----------
@@ -553,15 +648,19 @@ class Shopping(Ebay):
         >>> shopping = Shopping(sandbox=True)
         >>> shopping  #doctest: +ELLIPSIS
         <app.api.Shopping object at 0x...>
-        >>> shopping.kwargs['domain']
-        'open.api.sandbox.ebay.com'
+        >>> shopping.kwargs['domain'] == 'open.api.sandbox.ebay.com'
+        True
         >>> shopping = Shopping(sandbox=False)
-        >>> shopping.kwargs['domain']
-        'open.api.ebay.com'
+        >>> shopping.kwargs['domain'] == 'open.api.ebay.com'
+        True
         """
 
         super(Shopping, self).__init__(**kwargs)
-        domain = 'open.api.sandbox.ebay.com' if self.sandbox else 'open.api.ebay.com'
+
+        if self.sandbox:
+            domain = 'open.api.sandbox.ebay.com'
+        else:
+            domain = 'open.api.ebay.com'
 
         new = {
             'siteid': self.global_ids[self.kwargs['country']]['countryid'],
@@ -575,8 +674,7 @@ class Shopping(Ebay):
         self.api = shopping(**self.kwargs)
 
     def search(self, options):
-        """
-        Search eBay using the Shopping API.
+        """Search eBay using the Shopping API.
 
         see http://developer.ebay.com/DevZone/shopping/docs/CallRef/index.html
         for additional options required for the specific verb.
@@ -607,30 +705,32 @@ class Shopping(Ebay):
 
         Examples
         --------
+        >>> finding = Finding(sandbox=True)
+        >>> response = finding.search({'keywords': 'lego'})
+        >>> parsed = finding.parse(response)
+        >>> item = list(parsed['results'].values())[0]
         >>> shopping = Shopping(sandbox=True)
-        >>> id = '110039953580'
-        >>> opts = {'DestinationCountryCode': 'US', 'ItemID': id, \
-'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1, \
-'MessageID': id}
+        >>> opts = {
+        ...     'DestinationCountryCode': 'US', 'ItemID': item['id'],
+        ...     'DestinationPostalCode': '61605', 'IncludeDetails': False,
+        ...     'QuantitySold': 1, 'MessageID': item['id']}
         >>> response = shopping.search(opts)
-        >>> response.keys()[:6]
-        ['Errors', 'Ack', 'Timestamp', 'value', 'Version', 'Build']
-        >>> 'CorrelationID' in response.keys()
-        True
-        >>> 'ShippingCostSummary' in response.keys()
+        >>> set(response) == {
+        ...     'Version', 'Build', 'CorrelationID', 'Timestamp',
+        ...     'ShippingCostSummary', 'Ack'}
         True
         """
         verb = options.pop('verb', 'GetShippingCosts')
         is_US = options['DestinationCountryCode'] == 'US'
 
         if is_US and 'DestinationPostalCode' not in options:
-            raise ConnectionError({'Error': 'Missing DestinationPostalCode'})
+            message = 'Missing DestinationPostalCode'
+            return {'message': message, 'CorrelationID': options.get('ItemID')}
         else:
             return self.execute(verb, options)
 
     def parse(self, response):
-        """
-        Convert Shopping search response into a more readable format.
+        """Convert Shopping search response into a more readable format.
 
         Parameters
         ----------
@@ -643,34 +743,39 @@ class Shopping(Ebay):
 
         Examples
         --------
+        >>> finding = Finding()
+        >>> response = finding.search({'keywords': 'lego'})
+        >>> parsed = finding.parse(response)
+        >>> item = list(parsed['results'].values())[0]
         >>> shopping = Shopping(country='US')
-        >>> id = '111372333351'
-        >>> opts = {'DestinationCountryCode': 'US', 'ItemID': id, \
-'DestinationPostalCode': '61605', 'IncludeDetails': False, 'QuantitySold': 1, \
-'MessageID': id}
+        >>> opts = {
+        ...     'DestinationCountryCode': 'US', 'ItemID': item['id'],
+        ...     'DestinationPostalCode': '61605', 'IncludeDetails': False,
+        ...     'QuantitySold': 1, 'MessageID': item['id']}
         >>> response = shopping.search(opts)
         >>> parsed = shopping.parse(response)
-        >>> parsed.keys()
-        ['results']
-        >>> parsed['results'].keys()[:2]
-        ['item_id', 'actual_shipping']
+        >>> set(parsed) == {'results'}
+        True
+        >>> fields = {
+        ...     'item_id', 'actual_shipping', 'actual_shipping_service',
+        ...     'actual_shipping_currency', 'actual_shipping_type', 'message'}
+        >>> set(parsed['results']).difference(fields) == set()
+        True
         """
-        item_id = response['CorrelationID']['value']
-        deets = response['ShippingCostSummary']
-        keys = [
-            'item_id', 'actual_shipping', 'actual_shipping_currency',
-            'actual_shipping_service', 'actual_shipping_type']
+        item_id = response.get('CorrelationID')
+        deets = response.get('ShippingCostSummary')
 
         if deets:
             cost = deets['ShippingServiceCost']
-            values = [
-                item_id,
-                float(cost['value'] or 0),
-                cost['currencyID']['value'],
-                deets['ShippingServiceName']['value'],
-                deets['ShippingType']['value'],
-            ]
-        else:
-            values = chain([item_id], repeat(False, len(keys)))
 
-        return {'results': dict(zip(keys, values))}
+            results = {
+                'item_id': item_id,
+                'actual_shipping': float(cost['value'] or 0),
+                'actual_shipping_currency': cost['_currencyID'],
+                'actual_shipping_service': deets['ShippingServiceName'],
+                'actual_shipping_type': deets['ShippingType'],
+            }
+        else:
+            results = {'message': response.get('message'), 'item_id': item_id}
+
+        return {'results': results}

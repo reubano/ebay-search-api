@@ -1,242 +1,211 @@
 # -*- coding: utf-8 -*-
 """
-	app
-	~~~~~~~~~~~~~~
+    app
+    ~~~
 
-	Provides the flask application
+    Provides the flask application
+
+    ###########################################################################
+    # WARNING: if running on a a staging server, you MUST set the 'STAGE' env
+    # heroku config:set STAGE=true --remote staging
+    ###########################################################################
 """
-from __future__ import absolute_import
-from future.builtins import str
-
-try:
-	from urllib.parse import unquote
-except ImportError:
-	from urllib import unquote
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals)
 
 import config
 
-from ast import literal_eval
 from os import getenv
-from json import JSONEncoder, dumps, loads
-from .api import Trading, Finding, Shopping
-from ebaysdk.exception import ConnectionError
-from flask import Flask, redirect, url_for, request, make_response
-from flask.ext.cache import Cache
+from json import dumps
+from functools import partial
+
+from flask import Flask, send_from_directory, render_template
+from flask_caching import Cache
+from flask_compress import Compress
+from flask_cors import CORS
+from flask_sslify import SSLify
+
+from app.frs import Swaggerify
+from app.helper import gen_tables
+
+from builtins import *  # noqa  # pylint: disable=unused-import
+
+__version__ = '1.4.0'
+
+__title__ = 'eBay Search API'
+__package_name__ = 'ebay-search-api'
+__author__ = 'Reuben Cummings'
+__description__ = 'RESTful API for searching eBay sites'
+__email__ = 'reubano@gmail.com'
+__license__ = 'MIT'
+__copyright__ = 'Copyright 2017 Reuben Cummings'
 
 cache = Cache()
-search_cache_timeout = 60 * 60 * 1  # hours (in seconds)
-ship_cache_timeout = 60 * 60 * 1  # hours (in seconds)
-usage_cache_timeout = 60 * 60 * 1  # hours (in seconds)
-category_cache_timeout = 60 * 60 * 24 * 7  # days (in seconds)
-sub_category_cache_timeout = 60 * 60 * 24 * 1  # days (in seconds)
-encoding = 'utf8'
+compress = Compress()
+swag = Swaggerify()
 
+API_RESPONSE = [{'name': 'objects', 'desc': 'message', 'type': 'str'}]
+SEARCH_RESULT = [
+    {'name': 'buy_now_price', 'desc': 'Buy It Now price', 'type': 'float'},
+    {
+        'name': 'buy_now_price_and_shipping',
+        'desc': 'Buy It Now plus shipping cost', 'type': 'float'},
+    {'name': 'condition', 'desc': 'Item condition', 'type': 'str'},
+    {'name': 'end_date', 'desc': 'End date', 'type': 'date'},
+    {'name': 'end_date_time', 'desc': 'End datetime in seconds', 'type': 'int'},
+    {'name': 'end_time', 'desc': 'End time', 'type': 'time'},
+    {'name': 'id', 'desc': 'Item ID', 'type': 'int'},
+    {'name': 'item_type', 'desc': 'Item type', 'type': 'str'},
+    {'name': 'price', 'desc': 'Item price', 'type': 'float'},
+    {
+        'name': 'price_and_shipping', 'desc': 'Item price plus shipping cost',
+        'type': 'float'},
+    {'name': 'shipping', 'desc': 'Item shipping cost', 'type': 'float'},
+    {'name': 'title', 'desc': 'Item title', 'type': 'str'},
+    {'name': 'url', 'desc': 'Item url', 'type': 'str'}]
 
-def jsonify(status=200, indent=2, sort_keys=True, **kwargs):
-	options = {'indent': indent, 'sort_keys': sort_keys, 'ensure_ascii': False}
-	response = make_response(dumps(kwargs, cls=CustomEncoder, **options))
-	response.headers['Content-Type'] = 'application/json; charset=utf-8'
-	response.headers['mimetype'] = 'application/json'
-	response.status_code = status
-	return response
+SHIP_RESULT = [
+    {'name': 'actual_shipping', 'desc': 'Shipping cost', 'type': 'float'},
+    {
+        'name': 'actual_shipping_currency',
+        'desc': 'Accepted shipping currency', 'type': 'str'},
+    {
+        'name': 'actual_shipping_service', 'desc': 'Shipping service',
+        'type': 'str'},
+    {'name': 'actual_shipping_type', 'desc': 'Shipping type', 'type': 'str'},
+    {'name': 'item_id', 'desc': 'Item ID', 'type': 'int'}]
 
+CAT_RESULT = [
+    {'name': 'category', 'type': 'str'},
+    {'name': 'country', 'type': 'str'},
+    {'name': 'id', 'type': 'int'},
+    {'name': 'level', 'type': 'int'},
+    {'name': 'parent_id', 'type': 'int'}]
 
-def corsify(response, methods):
-	base = 'HEAD, OPTIONS'
-	headers = 'Origin, X-Requested-With, Content-Type, Accept'
-
-	for m in methods:
-		base += ', %s' % m
-
-	response.headers['Access-Control-Allow-Origin'] = '*'
-	response.headers['Access-Control-Allow-Methods'] = base
-	response.headers['Access-Control-Allow-Headers'] = headers
-	response.headers['Access-Control-Allow-Credentials'] = 'true'
-	return response
-
-
-def make_cache_key(*args, **kwargs):
-	return request.url
-
-
-def parse(string):
-	string = string.encode(encoding)
-
-	if string.lower() in ('true', 'false'):
-		return loads(string.lower())
-	else:
-		try:
-			return literal_eval(string)
-		except (ValueError, SyntaxError):
-			return string
+ITEM_RESULT = [
+    {'name': 'AutoPay', 'type': 'bool'},
+    {'name': 'BuyItNowPrice', 'type': 'object'},
+    {'name': 'BuyerGuaranteePrice', 'type': 'object'},
+    {'name': 'BuyerProtection', 'type': 'str'},
+    {'name': 'BuyerResponsibleForShipping', 'type': 'bool'},
+    {'name': 'ConditionDisplayName', 'type': 'str'},
+    {'name': 'ConditionID', 'type': 'int'},
+    {'name': 'Country', 'type': 'str'},
+    {'name': 'Currency', 'type': 'str'},
+    {'name': 'DispatchTimeMax', 'type': 'int'},
+    {'name': 'GetItFast', 'type': 'bool'},
+    {'name': 'GiftIcon', 'type': 'int'},
+    {'name': 'HideFromSearch', 'type': 'bool'},
+    {'name': 'HitCount', 'type': 'int'},
+    {'name': 'HitCounter', 'type': 'str'},
+    {'name': 'IntangibleItem', 'type': 'bool'},
+    {'name': 'ItemID', 'type': 'int'},
+    {'name': 'ListingDetails', 'type': 'object'},
+    {'name': 'ListingDuration', 'type': 'str'},
+    {'name': 'ListingType', 'type': 'str'},
+    {'name': 'Location', 'type': 'str'},
+    {'name': 'LocationDefaulted', 'type': 'bool'},
+    {'name': 'PaymentMethods', 'type': 'str'},
+    {'name': 'PictureDetails', 'type': 'object'},
+    {'name': 'PostCheckoutExperienceEnabled', 'type': 'bool'},
+    {'name': 'PostalCode', 'type': 'str'},
+    {'name': 'PrimaryCategory', 'type': 'object'},
+    {'name': 'PrivateListing', 'type': 'bool'},
+    {'name': 'ProductListingDetails', 'type': 'object'},
+    {'name': 'ProxyItem', 'type': 'bool'},
+    {'name': 'Quantity', 'type': 'int'},
+    {'name': 'RelistParentID', 'type': 'int'},
+    {'name': 'ReturnPolicy', 'type': 'object'},
+    {'name': 'ReviseStatus', 'type': 'object'},
+    {'name': 'Seller', 'type': 'object'},
+    {'name': 'SellingStatus', 'type': 'object'},
+    {'name': 'ShipToLocations', 'type': 'str'},
+    {'name': 'ShippingDetails', 'type': 'object'},
+    {'name': 'ShippingPackageDetails', 'type': 'object'},
+    {'name': 'Site', 'type': 'str'},
+    {'name': 'StartPrice', 'type': 'object'},
+    {'name': 'Storefront', 'type': 'object'},
+    {'name': 'TimeLeft', 'type': 'str'},
+    {'name': 'Title', 'type': 'str'},
+    {'name': 'TopRatedListing', 'type': 'bool'},
+    {'name': 'eBayPlus', 'type': 'bool'},
+    {'name': 'eBayPlusEligible', 'type': 'bool'}]
 
 
 def create_app(config_mode=None, config_file=None):
-	# Create webapp instance
-	app = Flask(__name__)
-	cache_config = {}
+    # Create webapp instance
+    app = Flask(__name__)
+    app.register_blueprint(blueprint)
+    CORS(app)
+    compress.init_app(app)
+    cache_config = {}
 
-	if config_mode:
-		app.config.from_object(getattr(config, config_mode))
-	elif config_file:
-		app.config.from_pyfile(config_file)
-	else:
-		app.config.from_envvar('APP_SETTINGS', silent=True)
+    if config_mode:
+        app.config.from_object(getattr(config, config_mode))
+    elif config_file:
+        app.config.from_pyfile(config_file)
+    else:
+        app.config.from_envvar('APP_SETTINGS', silent=True)
 
-	if app.config['HEROKU']:
-		cache_config['CACHE_TYPE'] = 'spreadsaslmemcachedcache'
-		cache_config['CACHE_MEMCACHED_SERVERS'] = [getenv('MEMCACHIER_SERVERS')]
-		cache_config['CACHE_MEMCACHED_USERNAME'] = getenv('MEMCACHIER_USERNAME')
-		cache_config['CACHE_MEMCACHED_PASSWORD'] = getenv('MEMCACHIER_PASSWORD')
-	elif app.config['DEBUG_MEMCACHE']:
-		cache_config['CACHE_TYPE'] = 'memcached'
-		cache_config['CACHE_MEMCACHED_SERVERS'] = [getenv('MEMCACHE_SERVERS')]
-	else:
-		cache_config['CACHE_TYPE'] = 'simple'
+    if app.config.get('SERVER_NAME'):
+        SSLify(app)
 
-	cache.init_app(app, config=cache_config)
+    if app.config['HEROKU']:
+        cache_config['CACHE_TYPE'] = 'saslmemcached'
+        cache_config['CACHE_MEMCACHED_SERVERS'] = [getenv('MEMCACHIER_SERVERS')]
+        cache_config['CACHE_MEMCACHED_USERNAME'] = getenv('MEMCACHIER_USERNAME')
+        cache_config['CACHE_MEMCACHED_PASSWORD'] = getenv('MEMCACHIER_PASSWORD')
+    elif app.config['DEBUG_MEMCACHE']:
+        cache_config['CACHE_TYPE'] = 'memcached'
+        cache_config['CACHE_MEMCACHED_SERVERS'] = [getenv('MEMCACHE_SERVERS')]
+    else:
+        cache_config['CACHE_TYPE'] = 'simple'
 
-	@app.route('/')
-	def home():
-		return redirect(url_for('api'))
+    cache.init_app(app, config=cache_config)
 
-	@app.route('/api/')
-	@app.route('%s/' % app.config['API_URL_PREFIX'])
-	def api():
-		return 'Welcome to the %s!' % app.config['APP_NAME']
+    skwargs = {
+        'name': app.config['APP_NAME'], 'version': __version__,
+        'description': __description__}
 
-	@app.route('/api/usage/')
-	@app.route('%s/usage/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=usage_cache_timeout, key_prefix=make_cache_key)
-	def usage():
-		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
-		finding = Finding(**kwargs)
-		options = {}
-		options.update(kwargs)
+    swag.init_app(app, **skwargs)
 
-		try:
-			response = finding.search(options)
-			result = finding.parse(response)
-			status = 200
-		except ConnectionError as err:
-			result = err.message
-			status = 500
+    swag_config = {
+        'dom_id': '#swagger-ui',
+        'url': app.config['SWAGGER_JSON'],
+        'layout': 'StandaloneLayout'}
 
-		return jsonify(status, objects=result)
+    context = {
+        'base_url': app.config['SWAGGER_URL'],
+        'app_name': app.config['APP_NAME'],
+        'config_json': dumps(swag_config)}
 
-	@app.route('/api/search/')
-	@app.route('%s/search/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
-	def search():
-		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
-		finding = Finding(**kwargs)
+    @app.route('/')
+    @app.route('/<path>/')
+    @app.route('{API_URL_PREFIX}/'.format(**app.config))
+    @app.route('{API_URL_PREFIX}/<path>/'.format(**app.config))
+    def home(path=None):
+        if not path or path == 'index.html':
+            return render_template('index.html', **context)
+        else:
+            return send_from_directory('static', path)
 
-		options = {
-			'paginationInput': {'entriesPerPage': 100, 'pageNumber': 1},
-			'sortOrder': 'EndTimeSoonest',
-		}
+    exclude = app.config['SWAGGER_EXCLUDE_COLUMNS']
+    create_docs = partial(swag.create_docs, exclude_columns=exclude)
+    create_defs = partial(create_docs, skip_path=True)
 
-		options.update(kwargs)
+    create_defs({'columns': SEARCH_RESULT, 'name': 'search_result'})
+    create_defs({'columns': SHIP_RESULT, 'name': 'ship_result'})
+    create_defs({'columns': ITEM_RESULT, 'name': 'item_result'})
+    create_defs({'columns': CAT_RESULT, 'name': 'category_result'})
+    create_defs({'columns': CAT_RESULT, 'name': 'sub_category_result'})
 
-		try:
-			response = finding.search(options)
-			result = finding.parse(response)
-			status = 200
-		except ConnectionError as err:
-			result = err.message
-			status = 500
+    with app.app_context():
+        rule_map = app.url_map._rules_by_endpoint
 
-		return jsonify(status, objects=result)
+        for table in gen_tables(app.view_functions, rule_map, **app.config):
+            create_docs(table)
 
-	@app.route('/api/ship/<id>/')
-	@app.route('%s/ship/<id>/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=ship_cache_timeout, key_prefix=make_cache_key)
-	def ship(id):
-		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
-		shopping = Shopping(**kwargs)
-		options = {'ItemID': id, 'MessageID': id, 'DestinationCountryCode': 'US'}
-		# see http://www.airlinecodes.co.uk/country.asp for valid codes
-		options.update(kwargs)
+    return app
 
-		try:
-			response = shopping.search(options)
-			result = shopping.parse(response)
-			status = 200
-		except ConnectionError as err:
-			result = err.message
-			status = 500
-
-		return jsonify(status, objects=result)
-
-	@app.route('/api/category/')
-	@app.route('%s/category/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=category_cache_timeout, key_prefix=make_cache_key)
-	def category():
-		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
-		trading = Trading(**kwargs)
-		cat_array = trading.get_categories().CategoryArray
-		response = cat_array.Category
-		return jsonify(objects=trading.parse(response))
-
-	@app.route('/api/category/<name>/subcategories/')
-	@app.route('%s/category/<name>/subcategories/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=sub_category_cache_timeout, key_prefix=make_cache_key)
-	def sub_category(name):
-		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
-		trading = Trading(**kwargs)
-		cat_array = trading.get_categories().CategoryArray
-		response = cat_array.Category
-		categories = trading.parse(response)
-		lookup = trading.make_lookup(categories)
-
-		try:
-			cat_id = lookup[unquote(name.lower())]['id']
-			hier_array = trading.get_hierarchy(cat_id).CategoryArray
-			response = hier_array.Category
-			result = trading.parse(response)
-			status = 200
-		except KeyError:
-			url = request.url.replace('%s/subcategories/' % name, '')
-			msg = "Category %s doesn't exist. View %s to see valid categories."
-			result = msg % (name, url)
-			status = 500
-
-		return jsonify(status, objects=result)
-
-	@app.route('/api/item/<id>/')
-	@app.route('%s/item/<id>/' % app.config['API_URL_PREFIX'])
-	@cache.cached(timeout=search_cache_timeout, key_prefix=make_cache_key)
-	def item(id):
-		kwargs = {k: parse(v) for k, v in request.args.to_dict().items()}
-
-		try:
-			trading = Trading(**kwargs)
-			response = trading.get_item(id)
-			result = response.Item
-			status = 200
-		except ConnectionError as err:
-			result = err.message
-			status = 500
-
-		return jsonify(status, objects=result)
-
-	@app.route('/api/reset/')
-	@app.route('%s/reset/' % app.config['API_URL_PREFIX'])
-	def reset():
-		cache.clear()
-		return jsonify(objects="Caches reset")
-
-	@app.after_request
-	def add_cors_header(response):
-		return corsify(response, app.config['API_METHODS'])
-
-	return app
-
-
-class CustomEncoder(JSONEncoder):
-	def default(self, obj):
-		if set(['quantize', 'year']).intersection(dir(obj)):
-			return str(obj)
-		elif set(['next', 'union']).intersection(dir(obj)):
-			return list(obj)
-		return JSONEncoder.default(self, obj)
+# put at bottom to avoid circular reference errors
+from app.views import blueprint  # noqa

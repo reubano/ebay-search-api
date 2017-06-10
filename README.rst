@@ -1,10 +1,15 @@
-prometheus
-===========
+AMZN Search API |travis|
+========================
+
+.. |travis| image:: https://img.shields.io/travis/nerevu/prometheus-api/master.svg
+    :target: https://travis-ci.org/nerevu/prometheus-api
+
+===============
 
 Introduction
 ------------
 
-prometheus is a full featured web app that tells you how your stock portfolio has performed over time, gives insight into how to optimize your asset allocation, and monitors your portfolio for rebalancing or performance enhancing opportunities.. It has been tested on the following configuration:
+This is a RESTful API for searching Amazon sites
 
 * MacOS X 10.7.4
 * Python 2.7.1
@@ -21,18 +26,18 @@ Preparation
 
 Check that the correct version of Python is installed
 
-	python -V
+    python -V
 
 Installation
 ------------
 
 Install prometheus using either pip (recommended)
 
-	sudo pip install prometheus
+    sudo pip install prometheus
 
 or easy_install
 
-	sudo easy_install prometheus
+    sudo easy_install prometheus
 
 Using prometheus
 -----------------
@@ -40,33 +45,33 @@ Using prometheus
 Usage
 ^^^^^
 
-	prometheus [options] <argument>
+    prometheus [options] <argument>
 
 Examples
 ^^^^^^^^
 
 *normal usage*
 
-	prometheus argument
+    prometheus argument
 
 *stdin*
 
-	cat file | prometheus -
+    cat file | prometheus -
 
 *options*
 
-	prometheus -dc TZS  argument
+    prometheus -dc TZS  argument
 
 Options
 ^^^^^^^
 
-	  -c currency, --currency=currency      set currency, defaults to 'USD'
-	  -d, --debug                           enables debug mode, displays the
-	                                        options and arguments passed to the
-	                                        parser
-	  -v, --verbose                         verbose output
-	  -h, --help                            show this help message and exit
-	  --version                             show the program version and exit
+      -c currency, --currency=currency      set currency, defaults to 'USD'
+      -d, --debug                           enables debug mode, displays the
+                                            options and arguments passed to the
+                                            parser
+      -v, --verbose                         verbose output
+      -h, --help                            show this help message and exit
+      --version                             show the program version and exit
 
 Arguments
 ^^^^^^^^^

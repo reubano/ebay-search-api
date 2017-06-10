@@ -1,0 +1,6 @@
+recursive-include app/static *
+recursive-include app/templates *
+recursive-include app/tests *
+include LICENSE
+include *.rst
+include *requirements.txt
