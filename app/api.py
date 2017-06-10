@@ -282,7 +282,7 @@ class Trading(Ebay):
         ...     'ShippingPackageDetails', 'ListingType', 'PaymentMethods',
         ...     'BuyerRequirementDetails', 'BestOfferDetails',
         ...     'OutOfStockControl', 'TopRatedListing'}
-        >>> set(response['Item']).difference(fields) == set()
+        >>> len(set(response['Item']).intersection(fields)) > 40
         True
         """
         data = {'DetailLevel': 'ItemReturnAttributes', 'ItemID': item_id}
