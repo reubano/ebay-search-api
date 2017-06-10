@@ -4,32 +4,23 @@ matrix:
   include:
   - python: '2.7'
     install:
-    - pip install -U pip
-    - pip install wheel
-    - pip install -r dev-requirements.txt
     - pip install -r py2-requirements.txt
   - python: '3.5'
     install:
-    - pip install -U pip
-    - pip install wheel
-    - pip install -r dev-requirements.txt
     - pip install -r requirements.txt
   - python: '3.6'
     install:
-    - pip install -U pip
-    - pip install wheel
-    - pip install -r dev-requirements.txt
     - pip install -r requirements.txt
-    addons:
-      apt:
-        sources: heroku
-        packages: heroku-toolbelt
 cache:
   directories:
   - "~/.cache/pip"
 notifications:
   email:
     on_success: always
+before_install:
+- pip install -U pip
+- pip install wheel
+- pip install -r dev-requirements.txt
 before_script:
 - openssl aes-256-cbc -d -k "$secret" -in envs.yml.enc -a -out envs.yml
 - openssl aes-256-cbc -d -k "$secret" -in ebay.yaml.enc -a -out ebay.yaml
@@ -42,17 +33,10 @@ env:
   - secure: VhRlg3oe7WrSJU8UUdWflTg2k2EcIyYaUFwkXBEB0qJ7iMZIywqIlcnYXDknvJ/ishWKLLl1Uu1doKo3Jd3U/Qebdj0HUYoxEGdwczzAPJPbNDpaTrWYci5f1cvp8fFysNyFWpTNWOcNPbLt1fQ2MJmXHP6g9AnZzgxJ2tGR5rY=
   - secure: fABUQpDhEtHbbC5x85jqNFxYuEAI5hYkNI6oX7vzZtQy3lsuvdsN/WqS0vAawpBlCluhc4ak4LwwlvTPC1ZBv9ii7SIT8nF5bakY8hIUoJDBSVgTjIutUYch/BX5Yj1LnbAMU8WGFor+gPJxdrgKXkFhwlsUExF84qynAuQFdew=
   - secure: BTVB/JGBOCxqYDWmdoXts0fWc+KDfxIvQJOzMe5LIYvsDwzBv0L7gz+cC7sfKcfu7tpL7n2o4yPzZXd1Ak4GXuOnHlO/Uz4Um0rBAiOPn9Yn6mRzsYEHeAlaprjLJW17vZHC1y1Jag7m2Ip8E5afqcnc81avOjCw0czQOf9PVsQ=
-  - secure: ZE2W74onObCUWv3VuVBAPvddciay+l9uuhwCMX5cIqsXdi3EzylMVoNkbx4HB+fjX4enuvu+MVlWo74By221Ctovzcr03DlzUSKvSjaLYtp+O3EOXI/CHXDcKxLEaKhu3FbB6AHUHESwu6tbbiYH76AHI7LQsHuyFLewIK833zE=
   - secure: aQ8L8wD2X+Wq8+c7XWwtli2YhWNdJRlGiLFboQjnd4xebeBzKghIeBgf7e5MveuMQ9hP2HGXxuKWEFQKXQaIiNv1cZS8xaI9qAZrxeLQtuAtLymdt22Mwbb1kKJnZTsdxlH+HbyrVfrRGBTc4xN2zQ39OtrPc1rf/MJPk8snvTA=
-after_success:
-- if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
-- if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
-- if [[ "$TRAVIS_PYTHON_VERSION" != "3.6" ]]; then exit 0; fi
-- git remote add heroku git@heroku.com:ebay-search-api.git
-- echo "Host heroku.com" >> ~/.ssh/config
-- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
-- echo "   CheckHostIP no" >> ~/.ssh/config
-- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-- heroku keys:clear
-- yes | heroku keys:add
-- yes | git push heroku master
+deploy:
+  provider: heroku
+  api_key:
+    secure: Ro18iD4gcaKljqi/HyzRtQMXSheLSTPutys9u8gtw0ctfi1QDLItZzXQGd/y43bagXQyaZ8hH+GBWOr2S09te6s7XHWQG6iQxXvivs2xj+WjdJ9xNY4MCD/CzM4qBtY1DobVICV1xUk9D/9ryp80V3S+CFJ5n170WpUfqDOwvGU=
+  on:
+    python: '3.6'
