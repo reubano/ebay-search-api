@@ -35,18 +35,6 @@ before_script:
 - openssl aes-256-cbc -d -k "$secret" -in ebay.yaml.enc -a -out ebay.yaml
 script:
 - manage lint && manage test
-after_success:
-- if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
-- if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
-- if [[ "$TRAVIS_PYTHON_VERSION" != "3.6" ]]; then exit 0; fi
-- git remote add heroku git@heroku.com:amzn-search-api.git
-- echo "Host heroku.com" >> ~/.ssh/config
-- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
-- echo "   CheckHostIP no" >> ~/.ssh/config
-- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-- heroku keys:clear
-- yes | heroku keys:add
-- yes | git push heroku master
 env:
   global:
   - secure: Cy2XEgF4c7GQri5EoJCq5KqGI6dQFHYp2L1JsUPTxegdmAMU06aFRRSy+Z5n0SQMB7Kt2jCt4qACioYiSiiICm67tjSKz8qA2eown1J39NCF+6rSMPctupy61T7tvPo5nFfTiPRl9Qs6zKWQsp761XSI1MzXk+Ppbot3vIKmee0=
@@ -56,3 +44,15 @@ env:
   - secure: BTVB/JGBOCxqYDWmdoXts0fWc+KDfxIvQJOzMe5LIYvsDwzBv0L7gz+cC7sfKcfu7tpL7n2o4yPzZXd1Ak4GXuOnHlO/Uz4Um0rBAiOPn9Yn6mRzsYEHeAlaprjLJW17vZHC1y1Jag7m2Ip8E5afqcnc81avOjCw0czQOf9PVsQ=
   - secure: ZE2W74onObCUWv3VuVBAPvddciay+l9uuhwCMX5cIqsXdi3EzylMVoNkbx4HB+fjX4enuvu+MVlWo74By221Ctovzcr03DlzUSKvSjaLYtp+O3EOXI/CHXDcKxLEaKhu3FbB6AHUHESwu6tbbiYH76AHI7LQsHuyFLewIK833zE=
   - secure: aQ8L8wD2X+Wq8+c7XWwtli2YhWNdJRlGiLFboQjnd4xebeBzKghIeBgf7e5MveuMQ9hP2HGXxuKWEFQKXQaIiNv1cZS8xaI9qAZrxeLQtuAtLymdt22Mwbb1kKJnZTsdxlH+HbyrVfrRGBTc4xN2zQ39OtrPc1rf/MJPk8snvTA=
+after_success:
+- if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
+- if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
+- if [[ "$TRAVIS_PYTHON_VERSION" != "3.6" ]]; then exit 0; fi
+- git remote add heroku git@heroku.com:ebay-search-api.git
+- echo "Host heroku.com" >> ~/.ssh/config
+- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
+- echo "   CheckHostIP no" >> ~/.ssh/config
+- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+- heroku keys:clear
+- yes | heroku keys:add
+- yes | git push heroku master
