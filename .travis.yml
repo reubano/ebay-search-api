@@ -32,6 +32,7 @@ notifications:
     on_success: always
 before_script:
 - openssl aes-256-cbc -d -k "$secret" -in envs.yml.enc -a -out envs.yml
+- openssl aes-256-cbc -d -k "$secret" -in ebay.yaml.enc -a -out ebay.yaml
 script:
 - manage lint && manage test
 after_success:
