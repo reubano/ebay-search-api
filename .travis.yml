@@ -2,56 +2,55 @@ sudo: false
 language: python
 matrix:
   include:
-    - python: '2.7'
-      install:
-        - pip install -U pip
-        - pip install wheel
-        - pip install -r dev-requirements.txt
-        - pip install -r py2-requirements.txt
-    - python: '3.5'
-      install:
-        - pip install -U pip
-        - pip install wheel
-        - pip install -r dev-requirements.txt
-        - pip install -r requirements.txt
-    - python: '3.6'
-      install:
-        - pip install -U pip
-        - pip install wheel
-        - pip install -r dev-requirements.txt
-        - pip install -r requirements.txt
-      addons:
-        apt:
-          sources: heroku
-          packages: heroku-toolbelt
+  - python: '2.7'
+    install:
+    - pip install -U pip
+    - pip install wheel
+    - pip install -r dev-requirements.txt
+    - pip install -r py2-requirements.txt
+  - python: '3.5'
+    install:
+    - pip install -U pip
+    - pip install wheel
+    - pip install -r dev-requirements.txt
+    - pip install -r requirements.txt
+  - python: '3.6'
+    install:
+    - pip install -U pip
+    - pip install wheel
+    - pip install -r dev-requirements.txt
+    - pip install -r requirements.txt
+    addons:
+      apt:
+        sources: heroku
+        packages: heroku-toolbelt
 cache:
   directories:
-    - ~/.cache/pip
+  - "~/.cache/pip"
 notifications:
   email:
     on_success: always
 before_script:
-  - openssl aes-256-cbc -d -k "$secret" -in envs.yml.enc -a -out envs.yml
+- openssl aes-256-cbc -d -k "$secret" -in envs.yml.enc -a -out envs.yml
 script:
 - manage lint && manage test
+after_success:
+- if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
+- if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
+- if [[ "$TRAVIS_PYTHON_VERSION" != "3.6" ]]; then exit 0; fi
+- git remote add heroku git@heroku.com:amzn-search-api.git
+- echo "Host heroku.com" >> ~/.ssh/config
+- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
+- echo "   CheckHostIP no" >> ~/.ssh/config
+- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+- heroku keys:clear
+- yes | heroku keys:add
+- yes | git push heroku master
 env:
   global:
-  - secure: Ngem5DLc2hunGbazgciwRImGGDJgZZfHwk0FtxbYUlwj+C5KwN9oOagFWQPI2XU/brKx6vVOdjUW5ZLwyit893T02sw4FI4DR4TRPTkbXUl92+LAvub54JuxryzPxNZxyPS0pV3e7fyQjLLggZNBviKZ/+CHwFtmnHSXHVJWPFk=
-  - secure: iTWueWXEyiWqu5HjrM2GXyyO3rNu/k0MGcU1n5aBwQ61J9T1LGBTyhDCNsyg8UQ720upWbiDoDho/28UadC9VzNTj0GGUGRn6FillMpg6g8DTsELJ9vmzSU4RyD/WlbPp9dKCLjbIEmxJOhtv9z4oB9uDZLao54bwTnqw3z2CGY=
-  - secure: b2LackUXhQ3jX0gR+G4Fa+lP0mxfR58bC2+KJG7qiWrdqTT5tMz5XVKJw+xEVSA/OQSiKUD+LP53rQQWHc8THQGfES2ncAS+Jeh/hqcQKaSNhofZvtXAGw5KOfXp8TfyuSnDILDjVFPyfsKRrOGM4dCZlRgrZyp768jbqVUapXg=
-  - secure: DyrvsGj9E7IbFFb1jQaTNWz+BCRhkEvDOoleIVTeLHFqk1WHPBrsEjk14RIppViPoeGnPfSaATTTeJ3Yegb7KCHVKI33RQkgEsbOZJ+ryUIgFdhBjhUDnBL/2lAkHtV1yxeQ7eIeqIdKrpI9hfwlBbsx2sJYPUqLKaCSuFTJ8+k=
-  - secure: AsJeUy0JcuZYfktDGPyK78o0JB0eHsiFcb9fDjWu775FCHbmrdGymbEo7jBnCBOPyFwcoJ9yec3j516zBGRSDOoO5wclZQLJiqFsAjhgN1gD/3tzoQik1Htyei1ABqezHZv6iLsfhzJCL/wH6ze0q3/kDDPH+XeZXQkZuY6G77o=
-  - secure: hpMRfqEZJ4gYohmypgA/6O/kiQM7eLVvQxSRnqL+lXhAzPPcXuxb0m4LfskvX3OSnz0nm3uqhKzb2NzhvRq0Ce9SPKitkGDpc1cxeY1nVdLiFmY1HZ0hQQo2ExjKEedddmApMq9QZYRDGej5XoVsBYd10x//8OejWutXQC4Bp3E=
-  - secure: hYmX7RC5wgmaE0N1hoEpZFI9LO2eyBFOlxCzbmMvukYtYgG7zZUlpNItvVZ4B64rMUq9v52TOb0H7e89dntYsmsle8UlFWOPqZp8vEoRsd2M8RuHhFRdKbQfPvDiV02n7ZGOaACpPI5zvRvY2XUj/XArpREr5tfzU2lvNIGE/yw=
-after_success:
-  - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
-  - if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" != "3.6" ]]; then exit 0; fi
-  - git remote add heroku git@heroku.com:amzn-search-api.git
-  - echo "Host heroku.com" >> ~/.ssh/config
-  - echo "   StrictHostKeyChecking no" >> ~/.ssh/config
-  - echo "   CheckHostIP no" >> ~/.ssh/config
-  - echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-  - heroku keys:clear
-  - yes | heroku keys:add
-  - yes | git push heroku master
+  - secure: Cy2XEgF4c7GQri5EoJCq5KqGI6dQFHYp2L1JsUPTxegdmAMU06aFRRSy+Z5n0SQMB7Kt2jCt4qACioYiSiiICm67tjSKz8qA2eown1J39NCF+6rSMPctupy61T7tvPo5nFfTiPRl9Qs6zKWQsp761XSI1MzXk+Ppbot3vIKmee0=
+  - secure: HIQqUxlKJR4fCcJ81goT+0UiRe05IQHQhfX5faO5skQpjmLOFVuIdoQ8EMqTwaN1lSAxb1lBC3+pYOnHFs68rF0yvKdxe5oUs++k/BmxrVa/3t3Y1e4Ui4Zrf6dexiakSti19J/z7ni/F6ic1AaZpUTxmF820Bk26qGpjU+clAE=
+  - secure: VhRlg3oe7WrSJU8UUdWflTg2k2EcIyYaUFwkXBEB0qJ7iMZIywqIlcnYXDknvJ/ishWKLLl1Uu1doKo3Jd3U/Qebdj0HUYoxEGdwczzAPJPbNDpaTrWYci5f1cvp8fFysNyFWpTNWOcNPbLt1fQ2MJmXHP6g9AnZzgxJ2tGR5rY=
+  - secure: fABUQpDhEtHbbC5x85jqNFxYuEAI5hYkNI6oX7vzZtQy3lsuvdsN/WqS0vAawpBlCluhc4ak4LwwlvTPC1ZBv9ii7SIT8nF5bakY8hIUoJDBSVgTjIutUYch/BX5Yj1LnbAMU8WGFor+gPJxdrgKXkFhwlsUExF84qynAuQFdew=
+  - secure: BTVB/JGBOCxqYDWmdoXts0fWc+KDfxIvQJOzMe5LIYvsDwzBv0L7gz+cC7sfKcfu7tpL7n2o4yPzZXd1Ak4GXuOnHlO/Uz4Um0rBAiOPn9Yn6mRzsYEHeAlaprjLJW17vZHC1y1Jag7m2Ip8E5afqcnc81avOjCw0czQOf9PVsQ=
+  - secure: ZE2W74onObCUWv3VuVBAPvddciay+l9uuhwCMX5cIqsXdi3EzylMVoNkbx4HB+fjX4enuvu+MVlWo74By221Ctovzcr03DlzUSKvSjaLYtp+O3EOXI/CHXDcKxLEaKhu3FbB6AHUHESwu6tbbiYH76AHI7LQsHuyFLewIK833zE=
