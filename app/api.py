@@ -66,7 +66,7 @@ class Andand(object):
 class Ebay(object):
     """A general Ebay API config object"""
 
-    def __init__(self, sandbox=False, **kwargs):
+    def __init__(self, sandbox=False, config_file=None, **kwargs):
         """Initialization method.
 
         Parameters
@@ -119,6 +119,7 @@ class Ebay(object):
         self.kwargs = {
             'appid': appid,
             'devid': kwargs.get('devid', getenv('EBAY_DEV_ID')),
+            'config_file': config_file,
             'debug': kwargs.get('verbose', False),
             'warnings': kwargs.get('verbose', False),
             'errors': kwargs.get('errors', True),
