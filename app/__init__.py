@@ -30,7 +30,7 @@ from app.helper import gen_tables
 
 from builtins import *  # noqa  # pylint: disable=unused-import
 
-__version__ = '1.4.0'
+__version__ = '1.5.0'
 
 __title__ = 'eBay Search API'
 __package_name__ = 'ebay-search-api'
