@@ -1,1 +1,5 @@
--r requirements/prod.txt
+-r base-requirements.txt
+gevent==1.2.1
+greenlet==0.4.12
+gunicorn==19.7.1
+pylibmc==1.5.2

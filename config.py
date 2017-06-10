@@ -1,50 +1,79 @@
-from future.builtins import object
-from os import getenv
-from slugify import slugify
+# -*- coding: utf-8 -*-
+"""
+    config
+    ~~~~~~
 
-# module vars
-_user = getenv('USER', getenv('USERNAME', 'default'))
+    Provides the flask config options
+    ###########################################################################
+    # WARNING: if running on a a staging server, you MUST set the 'STAGE' env
+    # heroku config:set STAGE=true --remote staging
+    ###########################################################################
+"""
+from os import getenv, path as p
+from datetime import timedelta
+from pkutils import parse_module
 
-# configurable vars
-__APP_NAME__ = 'eBay Search API'
-__YOUR_NAME__ = 'Reuben Cummings'
-__YOUR_EMAIL__ = '%s@gmail.com' % _user
-__YOUR_WEBSITE__ = 'http://%s.github.com' % _user
+PARENT_DIR = p.abspath(p.dirname(__file__))
+DAYS_PER_MONTH = 30
+
+app = parse_module(p.join(PARENT_DIR, 'app', '__init__.py'))
+user = getenv('USER', 'user')
+
+__APP_NAME__ = app.__package_name__
+__EMAIL__ = app.__email__
+__DOMAIN__ = 'nerevu.com'
+__SUB_DOMAIN__ = __APP_NAME__.split('-')[-1]
+
+
+def get_seconds(seconds=0, months=0, **kwargs):
+    seconds = timedelta(seconds=seconds, **kwargs).total_seconds()
+
+    if months:
+        seconds += timedelta(DAYS_PER_MONTH).total_seconds() * months
+
+    return int(seconds)
 
 
 # configuration
 class Config(object):
-	app = slugify(__APP_NAME__)
-	stage = getenv('STAGE', False)
-	end = '-stage' if stage else ''
-	# TODO: programatically get app name
-	heroku_server = '%s%s.herokuapp.com' % (app, end)
+    HEROKU = getenv('HEROKU', False)
+    DEBUG = False
+    TESTING = False
+    DEBUG_MEMCACHE = True
+    ADMINS = frozenset([__EMAIL__])
+    HOST = '127.0.0.1'
+    CACHE_TIMEOUT = get_seconds(minutes=60)
+    CAT_CACHE_TIMEOUT = get_seconds(days=7)
+    SUB_CAT_CACHE_TIMEOUT = get_seconds(hours=24)
+    APP_NAME = __APP_NAME__
 
-	APP_NAME = __APP_NAME__
-	HEROKU = getenv('HEROKU', False)
-	DEBUG = False
-	DEBUG_MEMCACHE = True
-	ADMINS = frozenset([__YOUR_EMAIL__])
-	TESTING = False
-	HOST = '127.0.0.1'
+    end = '-stage' if getenv('STAGE', False) else ''
 
-	if HEROKU:
-		SERVER_NAME = heroku_server
+    if HEROKU:
+        SERVER_NAME = '{}{}.herokuapp.com'.format(APP_NAME, end)
+    elif getenv('DIGITALOCEAN'):
+        SERVER_NAME = '{}.{}'.format(__SUB_DOMAIN__, __DOMAIN__)
+        SSLIFY_SUBDOMAINS = True
 
-	API_METHODS = ['GET']
-	API_MAX_RESULTS_PER_PAGE = 1000
-	API_URL_PREFIX = '/api/v1'
+    API_METHODS = ['GET', 'DELETE']
+    API_RESULTS_PER_PAGE = 32
+    API_MAX_RESULTS_PER_PAGE = 1024
+    API_URL_PREFIX = '/api/v1'
+    SWAGGER_URL = ''
+    SWAGGER_JSON = 'swagger.json'
+    SWAGGER_EXCLUDE_COLUMNS = {'utc_created', 'utc_updated'}
+    SWAGGER_EXCLUDE_ROUTES = {'static', 'swagger.swagger_json', 'home'}
 
 
 class Production(Config):
-	HOST = '0.0.0.0'
+    HOST = '0.0.0.0'
 
 
 class Development(Config):
-	DEBUG = True
-	DEBUG_MEMCACHE = False
+    DEBUG = True
+    DEBUG_MEMCACHE = False
 
 
 class Test(Config):
-	TESTING = True
-	DEBUG_MEMCACHE = False
+    TESTING = True
+    DEBUG_MEMCACHE = False

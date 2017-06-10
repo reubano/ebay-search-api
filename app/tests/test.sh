@@ -7,9 +7,11 @@
 # Redirect output to stderr.
 exec 2>&1
 
+# set path (necessary for gitx and git-gui)
+export PATH=$PATH:/opt/local/bin:/opt/local/sbin:/usr/local/sbin:/usr/local/bin
+
 # necessary check for initial commit
-git rev-parse --verify HEAD > /dev/null
-if [ $? == 0 ]; then
+if [ git rev-parse --verify HEAD >/dev/null 2>&1 ]; then
 	against=HEAD
 else
 	# Initial commit: diff against an empty tree object
@@ -34,30 +36,41 @@ for LINE in $(git diff-index --cached --full-index $against); do
 
 	# only check files with proper extension
 	if [ $FILEEXT == 'php' ]; then
-		COMMAND='php -l'
+		PROGRAMS='php'
+		COMMANDS='php -l'
 	elif [ $FILEEXT == 'py' ]; then
-		COMMAND='python manage.py lint --file'
+		PROGRAMS=$'pep8\npylint'
+# 		COMMANDS=$'pep8 --ignore=W191,E128\npylint --rcfile=app/tests/standard.rc -ry -fparseable'
+		COMMANDS=$'pep8 --ignore=W191,E121,E122'
 	else
 		continue
 	fi
 
-	git cat-file -p $SHA > tmp.txt
-	RESULT=$(eval "$COMMAND tmp.txt"); PASSED=$?
+	for PROGRAM in $PROGRAMS; do
+		test $(which $PROGRAM)
 
-	if [ $PASSED != 0 ]; then
-		echo "Check failed on $FILENAME"
-		for LINE in $RESULT; do echo $LINE; done
-  else
-		echo "Found no errors in $FILENAME!"
-	fi
+		if [ $? != 0 ]; then
+			echo "$PROGRAM binary does not exist or is not in path"
+			exit 1
+		fi
+	done
+
+	# check the staged content for syntax errors
+	for COMMAND in $COMMANDS; do
+		git cat-file -p $SHA > tmp.txt
+ 		RESULT=$(eval "$COMMAND tmp.txt")
+
+		if [ $? != 0 ]; then
+			echo "$COMMAND syntax check failed on $FILENAME"
+			for LINE in $RESULT; do echo $LINE; done
+			rm tmp.txt
+			exit 1
+		fi
+	done
 done
 
 unset IFS
-if [ -f tmp.txt ]; then
-  rm tmp.txt
-fi
-
-exit $PASSED
+rm tmp.txt
 
 # If there are whitespace errors, print the offending file names and fail.
 # exec git diff-index --check --cached $against --
