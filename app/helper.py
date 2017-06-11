@@ -49,6 +49,6 @@ def gen_tables(view_functions, rule_map, SWAGGER_EXCLUDE_ROUTES=None, **kwargs):
                         'name': func_name,
                         'method': method,
                         'desc': next(tree.iter(tag='paragraph')).text,
-                        'tag': 'Other' if func_name in other else 'Amazon',
+                        'tag': 'Other' if func_name in other else 'eBay',
                         'rtype': '{}_result'.format(func_name),
                         'ftype': ftypes.get(func_name, 'simple')}
