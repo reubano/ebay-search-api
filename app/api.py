@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Interface to Amazon API """
+""" Interface to eBay API """
 from __future__ import (
     absolute_import, division, print_function, unicode_literals)
 
