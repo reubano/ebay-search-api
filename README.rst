@@ -7,7 +7,7 @@ eBay Search API |travis|
 Introduction
 ------------
 
-`eBay Search API <http://ebay-search-api.herokuapp.com>`_ is a `Flask <http://flask.pocoo.org>`_ (`About Flask`_) powered RESTful API wrapper to the `Amazon search portal <https://www.amazon.com/ref=nb_sb_noss_null>`_.
+`eBay Search API <http://ebay-search-api.herokuapp.com>`_ is a `Flask <http://flask.pocoo.org>`_ (`About Flask`_) powered RESTful API wrapper to the `EBay search portal <https://www.ebay.com/>`_.
 
 Requirements
 ------------
